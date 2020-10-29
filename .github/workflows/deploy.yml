@@ -25,7 +25,7 @@ jobs:
     - name: Stop backend service
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: systemctl stop weather_warning_backend.service
+        command: sudo systemctl stop weather_warning_backend.service
         host: ${{ secrets.REMOTE_HOST }}
         username: ${{ secrets.REMOTE_USER }}
         privateKey: ${{ secrets.SSH_PRIVATE_KEY}}
@@ -41,7 +41,7 @@ jobs:
     - name: Start updated backend service
       uses: garygrossgarten/github-action-ssh@release
       with:
-        command: systemctl start weather_warning_backend.service
+        command: sudo systemctl start weather_warning_backend.service
         host: ${{ secrets.REMOTE_HOST }}
         username: ${{ secrets.REMOTE_USER }}
         privateKey: ${{ secrets.SSH_PRIVATE_KEY}} 
