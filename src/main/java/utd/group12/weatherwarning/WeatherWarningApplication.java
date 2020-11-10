@@ -3,13 +3,18 @@ package utd.group12.weatherwarning;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import utd.group12.weatherwarning.data.IDataServer;
+import utd.group12.weatherwarning.data.json.DataServer;
+
 @SpringBootApplication		// Registers our application for the REST api
 public class WeatherWarningApplication {
-
+	public static IDataServer data;
+	
 	public static void main(String[] args) {
-		// Pre server start code can go here
+		data = new DataServer();
+		data.start();
 		SpringApplication.run(WeatherWarningApplication.class, args); // Starts in other thread
-		// More code can go here to run in main thread after the server starts
+		data.stop();
 	}
 
 }

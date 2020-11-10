@@ -3,12 +3,12 @@
  */
 package utd.group12.weatherwarning.response;
 
-public class Greeting {
+public class GreetingResponse {
 
 	private final String service_name;
 	private final String content;
 
-	public Greeting(String service_name, String content) {
+	public GreetingResponse(String service_name, String content) {
 		this.service_name = service_name;
 		this.content = content;
 	}

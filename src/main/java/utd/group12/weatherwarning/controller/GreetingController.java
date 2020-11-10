@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import utd.group12.weatherwarning.response.Greeting;
+import utd.group12.weatherwarning.response.GreetingResponse;
 
 
 @RestController		// Registers our controller so the function will get called
@@ -22,9 +22,9 @@ public class GreetingController {
 	private static final String template = "Hello, %s!";
 
 	@GetMapping("/api/greeting")		// Register this method with the endpoint (can have multiple function per class)
-	public Greeting greeting(@RequestParam(value = "service_name", defaultValue = "Weather Warning") String service_name,	// add param @RequestParam registers it so it will get the pramiter from the http request
+	public GreetingResponse greeting(@RequestParam(value = "service_name", defaultValue = "Weather Warning") String service_name,	// add param @RequestParam registers it so it will get the pramiter from the http request
 			@RequestParam(value = "name", defaultValue = "World") String name) {			 // Second param
 		// More code can run here
-		return new Greeting(service_name, String.format(template, name));	// But when we return an object it will convert it to json
+		return new GreetingResponse(service_name, String.format(template, name));	// But when we return an object it will convert it to json
 	}
 }
