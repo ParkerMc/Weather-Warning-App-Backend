@@ -1,8 +1,0 @@
-{
-  "info": {
-    "clientID": "34455321601-k28pfh14jq1l3v7i5ilil79m8sk8mhco.apps.googleusercontent.com",
-    "authURI": "https://accounts.google.com/o/oauth2/auth",
-    "clientSecret": "Jj6GpLhKPEhIL8IkKRI4wJM7",
-    "redirectURI": "https://wwarning.parkermc.net/google_callback"
-  }
-}

@@ -10,6 +10,7 @@ import com.google.gson.GsonBuilder;
 
 import utd.group12.weatherwarning.data.IDataInfo;
 import utd.group12.weatherwarning.data.IDataServer;
+import utd.group12.weatherwarning.data.IDataUsers;
 
 public class DataServer implements IDataServer {
 	private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -28,15 +29,9 @@ public class DataServer implements IDataServer {
 				e.printStackTrace();
 			}
 		}else {
-			this.json = MainJson.create();
+			this.json = new MainJson();
 		}
-		try {
-			FileWriter writer = new FileWriter(file);
-			gson.toJson(this.json, writer);
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.forceSave();
 	}
 
 	@Override
@@ -45,6 +40,22 @@ public class DataServer implements IDataServer {
 	@Override
 	public IDataInfo getInfo() {
 		return this.json.info;
+	}
+
+	@Override
+	public IDataUsers getUsers() {
+		return this.json.users;
+	}
+
+	@Override
+	public void forceSave() {
+		try {
+			FileWriter writer = new FileWriter(file);
+			gson.toJson(this.json, writer);
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}		
 	}
 
 }

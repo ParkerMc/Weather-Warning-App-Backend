@@ -5,4 +5,6 @@ public interface IDataServer {
 	public void stop();
 	
 	public IDataInfo getInfo();
+	public IDataUsers getUsers();
+	public void forceSave();
 }
