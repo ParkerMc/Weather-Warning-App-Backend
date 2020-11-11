@@ -22,33 +22,57 @@ import utd.group12.weatherwarning.response.UserResponse;
 import utd.group12.weatherwarning.user.UserLogin;
 import utd.group12.weatherwarning.user.UserLogin.UsernameTokenPair;
 
-
+/**
+ * Handles the user related requests
+ */
 @RestController
 public class UserController {
 	
 	private final String getUserEndpoint = "/api/user";
+	/**
+	 * Handles the request for current logged in user
+	 * 
+	 * @param username	the currently logged in username
+	 * @param token		a given token for the currently logged in user 
+	 * @return			an error or the user information
+	 */
 	@GetMapping(getUserEndpoint)
 	public ResponseEntity<?> getUser(@RequestHeader("Auth-Username") String username, @RequestHeader("Auth-Token") String token) {
-		if(!UserLogin.isLoggedIn(username, token)) {
-			return new ResponseEntity<ErrorResponse>(new ErrorResponse(HttpStatus.UNAUTHORIZED, "You are not authenticated.", getUserEndpoint), HttpStatus.UNAUTHORIZED);
+		if(!UserLogin.isLoggedIn(username, token)) {	// If the user is not logged in return 401 Unauthorized
+			return new ErrorResponse(HttpStatus.UNAUTHORIZED, "You are not authenticated.", getUserEndpoint).toResponseEntity();
 		}
-		DataUser user = WeatherWarningApplication.data.getUsers().getUser(username);
-		return new ResponseEntity<UserResponse>(new UserResponse(user.getUsername(), user.getEmail(), user.getPhoneNumber()), HttpStatus.FOUND);
+		
+		DataUser user = WeatherWarningApplication.data.getUsers().getUser(username);	// Get the user and return that with 302 Found
+																						// We know it exits as it is confirmed they are logged in
+		return new ResponseEntity<UserResponse>(new UserResponse(user), HttpStatus.FOUND);
 	}
 	
 	private final String googleLoginEndpoint = "/api/user/google_login";
+	/**
+	 * Log the google user in or create an account for them
+	 * 
+	 * @param code	the code from Google's OAuth
+	 * @return		an error or the token, username, and token expiration
+	 */
 	@PostMapping(googleLoginEndpoint)
 	public ResponseEntity<?> googleLogin(@RequestParam(value = "code") String code) {
+		// Try and get the user's ID and email from google
 		UserInfoResponce userInfo;
 		try {
 			userInfo = GoogleLogin.getUserInfo(code);
-		} catch (IOException e) {
-			return new ResponseEntity<>(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error authenticating with google.", googleLoginEndpoint), HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (IOException e) {	// Respond with 500 Internal Server Error if there was an error
+			return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error authenticating with google.", googleLoginEndpoint).toResponseEntity();
 		}
-		UsernameTokenPair usernameTokenPair = UserLogin.GoogleLogin(userInfo.getId(), userInfo.getEmail());
-		if(usernameTokenPair == null) {
-			return new ResponseEntity<>(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error logging in.", googleLoginEndpoint), HttpStatus.INTERNAL_SERVER_ERROR);
+		
+		// Get the username and generate a token 
+		UsernameTokenPair usernameTokenPair = UserLogin.googleLogin(userInfo.getId(), userInfo.getEmail());
+		if(usernameTokenPair == null) {		// If there was an error and the token was not generated return error
+			return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error logging in.", googleLoginEndpoint).toResponseEntity();
 		}
-		return new ResponseEntity<>(new LoginResponse(usernameTokenPair.getUsername(), usernameTokenPair.getToken(), usernameTokenPair.getTokenExp()), HttpStatus.CREATED);
+		// Return with requested information
+		return new ResponseEntity<>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
 	}
+	
+	// TODO logout
+	// TODO normal login & register
 }

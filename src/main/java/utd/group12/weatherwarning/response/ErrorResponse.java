@@ -4,7 +4,11 @@ import java.time.Instant;
 import java.util.Date;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+/**
+ * Used to return an error where the status code is not 2XX or 3XX
+ */
 public class ErrorResponse {
 	private final Date timestamp;
 	private final int status;
@@ -12,6 +16,13 @@ public class ErrorResponse {
 	private final String message;
 	private final String path;
 	
+	/**
+	 * Creates the error response
+	 * 
+	 * @param status	The HTTP status to return
+	 * @param message	The more detail message (likely will be shown to the end user)
+	 * @param path		The endpoint where the error occurred
+	 */
 	public ErrorResponse(HttpStatus status, String message, String path) {
 		this.timestamp = Date.from(Instant.now());
 		this.status = status.value();
@@ -20,25 +31,27 @@ public class ErrorResponse {
 		this.path = path;
 	}
 	
-	public Date getTimestamp() {
-		return timestamp;
-	}
-
-	public int getStatus() {
-		return status;
-	}
-
+	public ResponseEntity<ErrorResponse> toResponseEntity() {
+		return new ResponseEntity<ErrorResponse>(this, HttpStatus.resolve(this.status));
+	}	
+	
 	public String getError() {
 		return error;
 	}
-
+	
 	public String getMessage() {
 		return message;
 	}
-
+	
 	public String getPath() {
 		return path;
 	}
 	
+	public int getStatus() {
+		return status;
+	}
 	
+	public Date getTimestamp() {
+		return timestamp;
+	}
 }

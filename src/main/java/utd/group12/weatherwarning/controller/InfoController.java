@@ -1,6 +1,3 @@
-/**
- * Returns all the random info to the client
- */
 package utd.group12.weatherwarning.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,9 +7,17 @@ import utd.group12.weatherwarning.google.GoogleLogin;
 import utd.group12.weatherwarning.response.InfoResponse;
 
 
+/**
+ * Handles the info requests
+ */
 @RestController
 public class InfoController {
 
+	/**
+	 * Responds with the random info the client needs
+	 * 
+	 * @return	the random info
+	 */
 	@GetMapping("/api/info")
 	public InfoResponse info() {
 		return new InfoResponse(GoogleLogin.getLoginUrl());
