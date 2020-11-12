@@ -26,7 +26,7 @@ public class DataUsers implements IDataUsers{
 		if(jUser == null) {	// Return null if the JSON user is null
 			return null;
 		}
-		return new DataUser(jUser.username, jUser.email, jUser.google_id, jUser.password, jUser.phoneNumber);	// Convert the user
+		return new DataUser(jUser.username, jUser.email, jUser.google_id, jUser.password, jUser.salt, jUser.phoneNumber);	// Convert the user
 	}
 	
 	/**
@@ -117,6 +117,22 @@ public class DataUsers implements IDataUsers{
 		users.put(username, new JsonUser(username, email, googleID, password, salt, phoneNumber)); // Else add them and save
 		WeatherWarningApplication.data.forceSave();
 		return toDataUser(users.get(username));	// Then return the new user
+	}
+	
+	/**
+	 * Gets a user by their email 
+	 * 
+	 * @param email	the email to use
+	 * @return		the user
+	 */
+	@Override
+	public DataUser getFromEmail(String email) {
+		for(JsonUser user : users.values()) {			// Loop through all the users
+			if(user.email.equals(email)) {				// if we find our email return true
+				return toDataUser(user);
+			}
+		}
+		return null;	// If it gets here, our email was not found
 	}
 	
 	/**

@@ -9,6 +9,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -91,5 +93,18 @@ public class Utils {
 		is.close();
 		reader.close();
 		return response;	// and return
+	}
+	
+	/**
+	 * Checks if a string matches the given regex
+	 * 
+	 * @param str		the string to check
+	 * @param regex		the regex to check with
+	 * @return			if the string matches the regex
+	 */
+	public static boolean matchRegex(String str, String regex) {
+		Pattern pattern = Pattern.compile(regex);	// Complile the patter and create the matcher
+		Matcher matcher = pattern.matcher(str);
+		return matcher.find();	// return if there is a match
 	}
 }

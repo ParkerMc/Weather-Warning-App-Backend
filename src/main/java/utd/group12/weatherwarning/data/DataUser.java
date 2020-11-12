@@ -8,6 +8,7 @@ public class DataUser {
 	private final String email;
 	private final String googleID;
 	private final String password;
+	private final String salt;
 	private final String phoneNumber;
 	
 	/**
@@ -17,14 +18,16 @@ public class DataUser {
 	 * @param username		the user's username
 	 * @param email			the user's email
 	 * @param googleID		the user's googleID 
-	 * @param password		the user's encrypted password
+	 * @param password		the user's hashed password
+	 * @param salt			the user's password salt
 	 * @param phoneNumber	the user's phone number
 	 */
-	public DataUser(String username, String email, String googleID, String password, String phoneNumber) {
+	public DataUser(String username, String email, String googleID, String password, String salt, String phoneNumber) {
 		this.username = username;
 		this.email = email;
 		this.googleID = googleID;
 		this.password = password;
+		this.salt = salt;
 		this.phoneNumber = phoneNumber;
 	}
 
@@ -49,10 +52,19 @@ public class DataUser {
 	/**
 	 * Gets the password
 	 * 
-	 * @return	the password
+	 * @return	the password hash
 	 */
 	public String getPassword() {
 		return password;
+	}
+	
+	/**
+	 * Gets the password salt
+	 * 
+	 * @return	the password salt
+	 */
+	public String getSalt() {
+		return salt;
 	}
 	
 	/**

@@ -14,9 +14,11 @@ import javax.crypto.spec.PBEKeySpec;
 
 import org.apache.commons.codec.binary.Hex;
 
+import utd.group12.weatherwarning.Utils;
 import utd.group12.weatherwarning.WeatherWarningApplication;
 import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.data.IDataUsers;
+import utd.group12.weatherwarning.errors.BadRequestError;
 import utd.group12.weatherwarning.errors.ConflictionError;
 
 /**
@@ -27,6 +29,10 @@ public class UserLogin {
 	private final static int PASSWORD_ITERATIONS = 10000;	// iterations to hash the password with
     private final static int PASSWORD_KEY_LENGTH = 512;		// the key length for the password
     private final static int PASSWORD_SALT_LENGTH = 32;		// the salt length for the password
+    
+    // Regexs to use
+    private final static String VALID_EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+    private final static String VALID_USERNAME_REGEX = "^[a-zA-Z0-9]+$";
 	
 	/**
 	 * Generates a random string with 0-9,a-z,A-Z of requested length
@@ -56,6 +62,54 @@ public class UserLogin {
             throw new RuntimeException(e);
         }
     }
+    
+	/**
+	 * Creates a new user
+	 * 
+	 * @param username			the new user's username
+	 * @param email				the new user's email
+	 * @param password			the new user's password
+	 * @param phoneNumber		the new user's phone number
+	 * @return					the username, token, and token experation
+	 * @throws ConflictionError	if the user or email is already used
+	 * @throws BadRequestError 
+	 */
+	public static UsernameTokenPair createUser(String username, String email, String password, String phoneNumber) throws ConflictionError, BadRequestError {
+		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
+		
+		if(!Utils.matchRegex(username, VALID_USERNAME_REGEX)) {	// Make sure username is valid
+			throw new BadRequestError("Invalid Username.");
+		}
+		if(!Utils.matchRegex(email, VALID_EMAIL_REGEX)) {		// Make sure email is valid
+			throw new BadRequestError("Invalid Email.");
+		}
+		if(dataUsers.isUsernameUsed(username)) {	// if the user is already used throw error 
+			throw new ConflictionError("username used");	
+		}
+		if(dataUsers.isEmailUsed(email)) {	// if the email is already used throw error 
+			throw new ConflictionError("email used");	
+		}
+		
+		String salt = generateRndString(PASSWORD_SALT_LENGTH);
+		String hashedPassword = Hex.encodeHexString(hashPassword(password, salt));
+		
+		// Create the user
+		DataUser user = dataUsers.createUser(username, email, null, hashedPassword, salt, phoneNumber);
+		if(user == null) {	// if the user is null an error occurred and return null
+			return null;
+		}
+				
+		// Generate token and expiration date/time
+		Date tokenExp = Date.from(Instant.now().plus(Duration.ofDays(EXPIRATION_DAYS)));
+		String token;
+		do {
+			token = generateRndString(50);
+		}while(dataUsers.isTokenUsed(token));	// Make sure this is a unique token
+		
+		// Add token and return
+		dataUsers.addToken(user.getUsername(), token, tokenExp);
+		return new UsernameTokenPair(user.getUsername(), token, tokenExp);
+	}
 
 	/**
 	 * Processes login from google
@@ -95,6 +149,7 @@ public class UserLogin {
 
 	/**
 	 * Checks if the user is properly authenticated
+	 * 
 	 * @param username	username to check for
 	 * @param token		token to check for
 	 * @return			if the user is authenticated
@@ -104,44 +159,28 @@ public class UserLogin {
 	}
 	
 	/**
-	 * Logs out the user
+	 * Logs a user in
 	 * 
-	 * @param username	the username to logout from
-	 * @param token		the token being used
+	 * @param identifier		the user's username or email
+	 * @param password			the user's password
+	 * @return					{@code UsernameTokenPair} that contains the username, token, and token expiration
+	 * @throws BadRequestError	When the identifier can't be used or the password is wrong
 	 */
-	public static void logout(String username, String token) {
-		WeatherWarningApplication.data.getUsers().removeToken(username, token);		// Just send to data handler
-	}
-	
-	/**
-	 * Creats a new user
-	 * 
-	 * @param username			the new user's username
-	 * @param email				the new user's email
-	 * @param password			the new user's password
-	 * @param phoneNumber		the new user's phone number
-	 * @return					the username, token, and token experation
-	 * @throws ConflictionError	if the user or email is already used
-	 */
-	public static UsernameTokenPair createUser(String username, String email, String password, String phoneNumber) throws ConflictionError {
+	public static UsernameTokenPair login(String identifier, String password) throws BadRequestError {
 		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
-		
-		if(dataUsers.isUsernameUsed(username)) {	// if the user is already used throw error 
-			throw new ConflictionError("username used");	
+		DataUser user = dataUsers.getUser(identifier);
+		if(user == null) {
+			user = dataUsers.getFromEmail(identifier);
+			if(user == null) {
+				throw new BadRequestError("Username or password is wrong.");
+			}
 		}
-		if(dataUsers.isEmailUsed(email)) {	// if the email is already used throw error 
-			throw new ConflictionError("email used");	
-		}		
 		
-		String salt = generateRndString(PASSWORD_SALT_LENGTH);
-		String hashedPassword = Hex.encodeHexString(hashPassword(password, salt));
-		
-		// Create the user
-		DataUser user = dataUsers.createUser(username, email, null, hashedPassword, salt, phoneNumber);
-		if(user == null) {	// if the user is null an error occurred and return null
-			return null;
+		String hashedPassword = Hex.encodeHexString(hashPassword(password, user.getSalt()));
+		if(!user.getPassword().equals(hashedPassword)) {
+			throw new BadRequestError("Username or password is wrong.");
 		}
-				
+		
 		// Generate token and expiration date/time
 		Date tokenExp = Date.from(Instant.now().plus(Duration.ofDays(EXPIRATION_DAYS)));
 		String token;
@@ -152,6 +191,16 @@ public class UserLogin {
 		// Add token and return
 		dataUsers.addToken(user.getUsername(), token, tokenExp);
 		return new UsernameTokenPair(user.getUsername(), token, tokenExp);
+	}
+	
+	/**
+	 * Logs out the user
+	 * 
+	 * @param username	the username to logout from
+	 * @param token		the token being used
+	 */
+	public static void logout(String username, String token) {
+		WeatherWarningApplication.data.getUsers().removeToken(username, token);		// Just send to data handler
 	}
 	
 	/**

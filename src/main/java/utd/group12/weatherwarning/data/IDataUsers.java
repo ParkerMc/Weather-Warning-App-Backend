@@ -54,6 +54,14 @@ public interface IDataUsers {
 	public DataUser createUser(String username, String email, String googleID, String password, String salt, String phoneNumber);
 	
 	/**
+	 * Gets a user by their email 
+	 * 
+	 * @param email	the email to use
+	 * @return		the user
+	 */
+	public DataUser getFromEmail(String email);
+	
+	/**
 	 * Gets a user by their Google ID
 	 * 
 	 * @param ID	the google ID to use

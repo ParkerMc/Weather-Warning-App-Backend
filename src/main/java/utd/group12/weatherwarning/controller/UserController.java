@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import utd.group12.weatherwarning.WeatherWarningApplication;
 import utd.group12.weatherwarning.data.DataUser;
+import utd.group12.weatherwarning.errors.BadRequestError;
 import utd.group12.weatherwarning.errors.ConflictionError;
 import utd.group12.weatherwarning.google.GoogleLogin;
 import utd.group12.weatherwarning.google.GoogleLogin.UserInfoResponce;
@@ -77,6 +78,33 @@ public class UserController {
 		return new ResponseEntity<>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
 	}
 	
+	private final String loginEndpoint = "/api/user/login";
+	/**
+	 * Handles the request to login a user
+	 * 
+	 * @param identifier	user's username or email 
+	 * @param password	new user's password
+	 * @return			an error or the token, username, and token expiration
+	 */
+	@PostMapping(loginEndpoint)
+	public ResponseEntity<?> login(
+			@RequestParam(value = "identifier") String identifier,
+			@RequestParam(value = "password") String password) {
+		
+		// Get the actual username and generate a token 
+		UsernameTokenPair usernameTokenPair;
+		try {
+			usernameTokenPair = UserLogin.login(identifier, password);
+		} catch (BadRequestError e) {
+			return new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage(), registerEndpoint).toResponseEntity();
+		}
+		if(usernameTokenPair == null) {		// If there was an error and the token was not generated return error
+			return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error logging in.", loginEndpoint).toResponseEntity();
+		}
+		// Return with requested information
+		return new ResponseEntity<>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
+	}
+	
 	private final String logoutEndpoint = "/api/user/logout";
 	/**
 	 * Handles the request to logout a user
@@ -118,11 +146,11 @@ public class UserController {
 			usernameTokenPair = UserLogin.createUser(username, email, password, "");
 		}catch(ConflictionError e) {
 			return new ErrorResponse(HttpStatus.CONFLICT, e.getMessage(), registerEndpoint).toResponseEntity();
+		} catch (BadRequestError e) {	// TODO add custom exception handler
+			return new ErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage(), registerEndpoint).toResponseEntity();
 		}
 		
 		return new ResponseEntity<>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
 	}
-	
-	// TODO normal login
 	// TODO maybe add check if username or email is already used
 }
