@@ -1,21 +1,32 @@
 package utd.group12.weatherwarning.user;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Random;
 
 import javax.annotation.Nullable;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
+import org.apache.commons.codec.binary.Hex;
 
 import utd.group12.weatherwarning.WeatherWarningApplication;
 import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.data.IDataUsers;
+import utd.group12.weatherwarning.errors.ConflictionError;
 
 /**
  * Handles processing user login and account creation
  */
 public class UserLogin {
-	private final static int EXPIRATION_DAYS = 30;		// The number of days each token should stay valid for
+	private final static int EXPIRATION_DAYS = 30;			// The number of days each token should stay valid for
+	private final static int PASSWORD_ITERATIONS = 10000;	// iterations to hash the password with
+    private final static int PASSWORD_KEY_LENGTH = 512;		// the key length for the password
+    private final static int PASSWORD_SALT_LENGTH = 32;		// the salt length for the password
 	
 	/**
 	 * Generates a random string with 0-9,a-z,A-Z of requested length
@@ -32,6 +43,18 @@ public class UserLogin {
             str.append(CHARS.charAt(index));
         }
         return str.toString();
+    }
+	
+    private static byte[] hashPassword(String password, String salt) {
+        try {
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), PASSWORD_ITERATIONS, PASSWORD_KEY_LENGTH);
+            SecretKey key = skf.generateSecret(spec);
+            byte[] res = key.getEncoded( );
+            return res;
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 	/**
@@ -59,7 +82,7 @@ public class UserLogin {
 			do {
 				username = generateRndString(15);						// Generate a username
 			} while(dataUsers.isUsernameUsed(username));				// and make sure it is unique
-			user = dataUsers.createUser(username, email, ID, "", "");	// Then create the user
+			user = dataUsers.createUser(username, email, ID, null, null, "");	// Then create the user
 			if(user == null) {	// If the user is still does not exist return null
 				return null;
 			}
@@ -88,6 +111,47 @@ public class UserLogin {
 	 */
 	public static void logout(String username, String token) {
 		WeatherWarningApplication.data.getUsers().removeToken(username, token);		// Just send to data handler
+	}
+	
+	/**
+	 * Creats a new user
+	 * 
+	 * @param username			the new user's username
+	 * @param email				the new user's email
+	 * @param password			the new user's password
+	 * @param phoneNumber		the new user's phone number
+	 * @return					the username, token, and token experation
+	 * @throws ConflictionError	if the user or email is already used
+	 */
+	public static UsernameTokenPair createUser(String username, String email, String password, String phoneNumber) throws ConflictionError {
+		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
+		
+		if(dataUsers.isUsernameUsed(username)) {	// if the user is already used throw error 
+			throw new ConflictionError("username used");	
+		}
+		if(dataUsers.isEmailUsed(email)) {	// if the email is already used throw error 
+			throw new ConflictionError("email used");	
+		}		
+		
+		String salt = generateRndString(PASSWORD_SALT_LENGTH);
+		String hashedPassword = Hex.encodeHexString(hashPassword(password, salt));
+		
+		// Create the user
+		DataUser user = dataUsers.createUser(username, email, null, hashedPassword, salt, phoneNumber);
+		if(user == null) {	// if the user is null an error occurred and return null
+			return null;
+		}
+				
+		// Generate token and expiration date/time
+		Date tokenExp = Date.from(Instant.now().plus(Duration.ofDays(EXPIRATION_DAYS)));
+		String token;
+		do {
+			token = generateRndString(50);
+		}while(dataUsers.isTokenUsed(token));	// Make sure this is a unique token
+		
+		// Add token and return
+		dataUsers.addToken(user.getUsername(), token, tokenExp);
+		return new UsernameTokenPair(user.getUsername(), token, tokenExp);
 	}
 	
 	/**

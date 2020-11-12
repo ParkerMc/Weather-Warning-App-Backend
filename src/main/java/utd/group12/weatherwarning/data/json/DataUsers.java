@@ -104,16 +104,17 @@ public class DataUsers implements IDataUsers{
 	 * @param email			the new user's email
 	 * @param googleID		the new user's googleID (or use {@code password})
 	 * @param password		the new user's password (or use {@code googleID})
+	 * @param salt			the salt for the new user's password (or use {@code googleID})
 	 * @param phoneNumber	the new user's phone number
 	 * @return				the user created
 	 */
 	@Override
 	@Nullable
-	public DataUser createUser(String username, String email, String googleID, String password, String phoneNumber) {
+	public DataUser createUser(String username, String email, String googleID, String password, String salt, String phoneNumber) {
 		if(users.containsKey(username)) {	// If the user exits return null
 			return null;
 		}
-		users.put(username, new JsonUser(username, email, googleID, password, phoneNumber)); // Else add them and save
+		users.put(username, new JsonUser(username, email, googleID, password, salt, phoneNumber)); // Else add them and save
 		WeatherWarningApplication.data.forceSave();
 		return toDataUser(users.get(username));	// Then return the new user
 	}
@@ -140,7 +141,23 @@ public class DataUsers implements IDataUsers{
 	public DataUser getUser(String username) {
 		return toDataUser(users.get(username));
 	}
-
+	
+	/**
+	 * Checks if a user with a given email exits
+	 * 
+	 * @param email		the email to check for
+	 * @return			if there is a user with that email
+	 */
+	@Override
+	public boolean isEmailUsed(String email) {
+		for(JsonUser user : users.values()) {			// Loop through all the users
+			if(user.email.equals(email)) {				// if we find our email return true
+				return true;
+			}
+		}
+		return false;	// If it gets here, our email was not found
+	}
+	
 	/**
 	 * Checks if a user with a given username exits
 	 * 
@@ -175,6 +192,7 @@ public class DataUsers implements IDataUsers{
 		String email;
 		String google_id;
 		String password;
+		String salt;
 		String phoneNumber;
 		Map<String, Date> tokens = new HashMap<String, Date>();
 		
@@ -185,13 +203,15 @@ public class DataUsers implements IDataUsers{
 		 * @param email			the email
 		 * @param google_id		the googleID
 		 * @param password		the password
+		 * @param salt			the password salt
 		 * @param phoneNumber	the phone number
 		 */
-		public JsonUser(String username, String email, String google_id, String password, String phoneNumber) {
+		public JsonUser(String username, String email, String google_id, String password, String salt, String phoneNumber) {
 			this.username = username;
 			this.email = email;
 			this.google_id = google_id;
 			this.password = password;
+			this.salt = salt;
 			this.phoneNumber = phoneNumber;
 		}
 	}

@@ -45,11 +45,13 @@ public interface IDataUsers {
 	 * @param email			the new user's email
 	 * @param googleID		the new user's googleID (or use {@code password})
 	 * @param password		the new user's password (or use {@code googleID})
+	 * @param salt			the salt for the new user's password (or use {@code googleID})
 	 * @param phoneNumber	the new user's phone number
+	 * @param phoneNumber2 
 	 * @return				the user created
 	 */
 	@Nullable
-	public DataUser createUser(String username, String email, String googleID, String password, String phoneNumber);
+	public DataUser createUser(String username, String email, String googleID, String password, String salt, String phoneNumber);
 	
 	/**
 	 * Gets a user by their Google ID
@@ -68,6 +70,14 @@ public interface IDataUsers {
 	 */
 	@Nullable
 	public DataUser getUser(String username);
+	
+	/**
+	 * Checks if a user with a given email exits
+	 * 
+	 * @param email		the email to check for
+	 * @return			if there is a user with that email
+	 */
+	public boolean isEmailUsed(String email);
 	
 	/**
 	 * Checks if a user with a given username exits

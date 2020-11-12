@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import utd.group12.weatherwarning.WeatherWarningApplication;
 import utd.group12.weatherwarning.data.DataUser;
+import utd.group12.weatherwarning.errors.ConflictionError;
 import utd.group12.weatherwarning.google.GoogleLogin;
 import utd.group12.weatherwarning.google.GoogleLogin.UserInfoResponce;
 import utd.group12.weatherwarning.response.ErrorResponse;
@@ -38,7 +39,9 @@ public class UserController {
 	 * @return			an error or the user information
 	 */
 	@GetMapping(getUserEndpoint)
-	public ResponseEntity<?> getUser(@RequestHeader("Auth-Username") String username, @RequestHeader("Auth-Token") String token) {
+	public ResponseEntity<?> getUser(
+			@RequestHeader("Auth-Username") String username,
+			@RequestHeader("Auth-Token") String token) {
 		if(!UserLogin.isLoggedIn(username, token)) {	// If the user is not logged in return 401 Unauthorized
 			return new ErrorResponse(HttpStatus.UNAUTHORIZED, "You are not authenticated.", getUserEndpoint).toResponseEntity();
 		}
@@ -80,10 +83,12 @@ public class UserController {
 	 * 
 	 * @param username	the currently logged in username
 	 * @param token		a given token for the currently logged in user 
-	 * @return			an error or the user information
+	 * @return			an error or http no content code
 	 */
 	@DeleteMapping(logoutEndpoint)
-	public ResponseEntity<?> logout(@RequestHeader("Auth-Username") String username, @RequestHeader("Auth-Token") String token) {
+	public ResponseEntity<?> logout(
+			@RequestHeader("Auth-Username") String username,
+			@RequestHeader("Auth-Token") String token) {
 		if(!UserLogin.isLoggedIn(username, token)) {	// If the user is not logged in return 401 Unauthorized
 			return new ErrorResponse(HttpStatus.UNAUTHORIZED, "You are not authenticated.", logoutEndpoint).toResponseEntity();
 		}
@@ -93,5 +98,31 @@ public class UserController {
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
 	
-	// TODO normal login & register
+	private final String registerEndpoint = "/api/user";
+	/**
+	 * Handles the request to logout a user
+	 * 
+	 * @param username	new user's username
+	 * @param email		new user's email 
+	 * @param password	new user's password
+	 * @return			an error or the token, username, and token expiration
+	 */
+	@PostMapping(registerEndpoint)
+	public ResponseEntity<?> register(
+			@RequestParam(value = "username") String username,
+			@RequestParam(value = "email") String email,
+			@RequestParam(value = "password")String password) {
+		
+		UsernameTokenPair usernameTokenPair;
+		try {
+			usernameTokenPair = UserLogin.createUser(username, email, password, "");
+		}catch(ConflictionError e) {
+			return new ErrorResponse(HttpStatus.CONFLICT, e.getMessage(), registerEndpoint).toResponseEntity();
+		}
+		
+		return new ResponseEntity<>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
+	}
+	
+	// TODO normal login
+	// TODO maybe add check if username or email is already used
 }
