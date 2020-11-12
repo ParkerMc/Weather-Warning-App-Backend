@@ -4,6 +4,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Random;
 
@@ -11,8 +12,6 @@ import javax.annotation.Nullable;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-
-import org.apache.commons.codec.binary.Hex;
 
 import utd.group12.weatherwarning.Utils;
 import utd.group12.weatherwarning.WeatherWarningApplication;
@@ -91,7 +90,7 @@ public class UserLogin {
 		}
 		
 		String salt = generateRndString(PASSWORD_SALT_LENGTH);
-		String hashedPassword = Hex.encodeHexString(hashPassword(password, salt));
+		String hashedPassword = Base64.getEncoder().encodeToString(hashPassword(password, salt));
 		
 		// Create the user
 		DataUser user = dataUsers.createUser(username, email, null, hashedPassword, salt, phoneNumber);
@@ -176,7 +175,7 @@ public class UserLogin {
 			}
 		}
 		
-		String hashedPassword = Hex.encodeHexString(hashPassword(password, user.getSalt()));
+		String hashedPassword = Base64.getEncoder().encodeToString(hashPassword(password, user.getSalt()));
 		if(!user.getPassword().equals(hashedPassword)) {
 			throw new BadRequestError("Username or password is wrong.");
 		}
