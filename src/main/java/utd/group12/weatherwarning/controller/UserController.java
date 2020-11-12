@@ -6,6 +6,7 @@ package utd.group12.weatherwarning.controller;
 import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -73,6 +74,24 @@ public class UserController {
 		return new ResponseEntity<>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
 	}
 	
-	// TODO logout
+	private final String logoutEndpoint = "/api/user/logout";
+	/**
+	 * Handles the request to logout a user
+	 * 
+	 * @param username	the currently logged in username
+	 * @param token		a given token for the currently logged in user 
+	 * @return			an error or the user information
+	 */
+	@DeleteMapping(logoutEndpoint)
+	public ResponseEntity<?> logout(@RequestHeader("Auth-Username") String username, @RequestHeader("Auth-Token") String token) {
+		if(!UserLogin.isLoggedIn(username, token)) {	// If the user is not logged in return 401 Unauthorized
+			return new ErrorResponse(HttpStatus.UNAUTHORIZED, "You are not authenticated.", logoutEndpoint).toResponseEntity();
+		}
+		
+		UserLogin.logout(username, token); // Logout the user
+		
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+	
 	// TODO normal login & register
 }

@@ -81,6 +81,16 @@ public class UserLogin {
 	}
 	
 	/**
+	 * Logs out the user
+	 * 
+	 * @param username	the username to logout from
+	 * @param token		the token being used
+	 */
+	public static void logout(String username, String token) {
+		WeatherWarningApplication.data.getUsers().removeToken(username, token);		// Just send to data handler
+	}
+	
+	/**
 	 * Used to return the username, token, and token expiration when someone logs in
 	 * Only has the constructor and getters
 	 */

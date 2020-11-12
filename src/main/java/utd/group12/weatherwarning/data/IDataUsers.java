@@ -76,4 +76,12 @@ public interface IDataUsers {
 	 * @return			if there is a user with that username
 	 */
 	public boolean isUsernameUsed(String username);
+
+	/**
+	 * Removes the token from a user
+	 * 
+	 * @param username	the username for the user
+	 * @param token		the token to remove
+	 */
+	public void removeToken(String username, String token);
 }

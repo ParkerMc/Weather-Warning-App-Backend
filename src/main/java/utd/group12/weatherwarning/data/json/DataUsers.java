@@ -153,6 +153,21 @@ public class DataUsers implements IDataUsers{
 	}
 	
 	/**
+	 * Removes the token from a user
+	 * 
+	 * @param username	the username for the user
+	 * @param token		the token to remove
+	 */
+	@Override
+	public void removeToken(String username, String token) {
+		if(!users.containsKey(username)) {
+			return;
+		}
+		users.get(username).tokens.remove(token);
+		WeatherWarningApplication.data.forceSave();
+	}
+	
+	/**
 	 * Stores the user in the JSON
 	 */
 	private class JsonUser{
