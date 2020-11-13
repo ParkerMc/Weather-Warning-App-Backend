@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import utd.group12.weatherwarning.Utils;
 import utd.group12.weatherwarning.WeatherWarningApplication;
 import utd.group12.weatherwarning.data.IDataInfo;
+import utd.group12.weatherwarning.errors.InternalServerError;
 
 /**
  * Handles everything related to logging in with google
@@ -32,16 +31,20 @@ public class GoogleLogin {
 	/**
 	 * Gets the requested user's info from the auth code
 	 * 
-	 * @param code			user's auth code from callback
-	 * @return				the user info
-	 * @throws IOException	if there is an http issue
+	 * @param code				user's auth code from callback
+	 * @return					the user info
+	 * @throws InternalServerError	if there is an error with accessing the Google API
 	 */
-	@Nullable
-	public static UserInfoResponce getUserInfo(String code) throws IOException {
+	public static UserInfoResponce getUserInfo(String code) throws InternalServerError {
 		IDataInfo dataInfo = WeatherWarningApplication.data.getInfo();	// Make data easier to access
 		
 		// Exchange auth code for access token
-		TokenResponce token = Utils.POSTRequest("https://oauth2.googleapis.com/token", new TokenRequest(dataInfo.getClientID(), dataInfo.getClientSecret(), code, "authorization_code", dataInfo.getRedirectURI()), TokenResponce.class);
+		TokenResponce token;
+		try {	// TODO handle http codes right
+			token = Utils.POSTRequest("https://oauth2.googleapis.com/token", new TokenRequest(dataInfo.getClientID(), dataInfo.getClientSecret(), code, "authorization_code", dataInfo.getRedirectURI()), TokenResponce.class);
+		} catch (IOException e) {
+			throw new InternalServerError("Error getting token from Google.", e);
+		}
 		
 		// Request the user info from Google
 		Map<String, String> args = new HashMap<String, String>();	// Create the map to hold the args 
@@ -49,7 +52,12 @@ public class GoogleLogin {
 			return null;
 		}
 		args.put("access_token", token.access_token);	// Add arg and perform request
-		UserInfoResponce userInfo = Utils.GETRequest("https://www.googleapis.com/oauth2/v2/userinfo", args, UserInfoResponce.class);
+		UserInfoResponce userInfo;
+		try {	// TODO handle http codes right
+			userInfo = Utils.GETRequest("https://www.googleapis.com/oauth2/v2/userinfo", args, UserInfoResponce.class);
+		} catch (IOException e) {
+			throw new InternalServerError("Error getting userinfo from Google.", e);
+		}
 		return userInfo;
 		
 	}

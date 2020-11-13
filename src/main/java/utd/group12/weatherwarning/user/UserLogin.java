@@ -8,7 +8,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Random;
 
-import javax.annotation.Nullable;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -18,7 +17,9 @@ import utd.group12.weatherwarning.WeatherWarningApplication;
 import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.data.IDataUsers;
 import utd.group12.weatherwarning.errors.BadRequestError;
-import utd.group12.weatherwarning.errors.ConflictionError;
+import utd.group12.weatherwarning.errors.ConflictError;
+import utd.group12.weatherwarning.errors.NotFoundError;
+import utd.group12.weatherwarning.errors.UnathorizedError;
 
 /**
  * Handles processing user login and account creation
@@ -70,23 +71,24 @@ public class UserLogin {
 	 * @param password			the new user's password
 	 * @param phoneNumber		the new user's phone number
 	 * @return					the username, token, and token experation
-	 * @throws ConflictionError	if the user or email is already used
-	 * @throws BadRequestError 
+	 * @throws ConflictError	if the user or email is already used
+	 * @throws BadRequestError 	if the username or email is invalid
 	 */
-	public static UsernameTokenPair createUser(String username, String email, String password, String phoneNumber) throws ConflictionError, BadRequestError {
+    // TODO add password requirements
+	public static UsernameTokenPair createUser(String username, String email, String password, String phoneNumber) throws ConflictError, BadRequestError {
 		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
 		
 		if(!Utils.matchRegex(username, VALID_USERNAME_REGEX)) {	// Make sure username is valid
-			throw new BadRequestError("Invalid Username.");
+			throw new BadRequestError("username invalid");
 		}
 		if(!Utils.matchRegex(email, VALID_EMAIL_REGEX)) {		// Make sure email is valid
-			throw new BadRequestError("Invalid Email.");
+			throw new BadRequestError("email invalid");
 		}
 		if(dataUsers.isUsernameUsed(username)) {	// if the user is already used throw error 
-			throw new ConflictionError("username used");	
+			throw new ConflictError("username used");	
 		}
 		if(dataUsers.isEmailUsed(email)) {	// if the email is already used throw error 
-			throw new ConflictionError("email used");	
+			throw new ConflictError("email used");	
 		}
 		
 		String salt = generateRndString(PASSWORD_SALT_LENGTH);
@@ -94,9 +96,6 @@ public class UserLogin {
 		
 		// Create the user
 		DataUser user = dataUsers.createUser(username, email, null, hashedPassword, salt, phoneNumber);
-		if(user == null) {	// if the user is null an error occurred and return null
-			return null;
-		}
 				
 		// Generate token and expiration date/time
 		Date tokenExp = Date.from(Instant.now().plus(Duration.ofDays(EXPIRATION_DAYS)));
@@ -117,7 +116,6 @@ public class UserLogin {
 	 * @param email		The user's email
 	 * @return			{@code UsernameTokenPair} that contains the username, token, and token expiration
 	 */
-	@Nullable
 	public static UsernameTokenPair googleLogin(String ID, String email) {
 		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
 		
@@ -129,21 +127,39 @@ public class UserLogin {
 		}while(dataUsers.isTokenUsed(token));	// Make sure this is a unique token
 		
 		// Get the user
-		DataUser user = dataUsers.getFromGoogleID(ID); 
-		if(user == null) {		// If the user does not exist create it
+		DataUser user;
+		try {
+			user = dataUsers.getFromGoogleID(ID);
+		} catch (NotFoundError e) {	// If the user does not exist create it
 			String username;
 			do {
 				username = generateRndString(15);						// Generate a username
 			} while(dataUsers.isUsernameUsed(username));				// and make sure it is unique
-			user = dataUsers.createUser(username, email, ID, null, null, "");	// Then create the user
-			if(user == null) {	// If the user is still does not exist return null
-				return null;
-			}
+			try {
+				user = dataUsers.createUser(username, email, ID, null, null, "");
+			} catch (ConflictError e1) {
+				throw new RuntimeException(); // Because we check if username is use there will be no error
+			}	
 		}
 		
 		// Add token and return
-		dataUsers.addToken(user.getUsername(), token, tokenExp);
+		try {
+			dataUsers.addToken(user.getUsername(), token, tokenExp);
+		} catch (BadRequestError e) {}	// Because we check if the username is there, there won't be an error
 		return new UsernameTokenPair(user.getUsername(), token, tokenExp);
+	}
+	
+	/**
+	 * Throws an error if the user is not properly authenticated
+	 * 
+	 * @param username			the username to authenticate with
+	 * @param token				the token to authenticate with
+	 * @throws UnathorizedError	if the user is not authenticated
+	 */
+	public static void requireLogin(String username, String token) throws UnathorizedError {
+		if(!isLoggedIn(username, token)) {	// If the user is not logged throw Unauthorized
+			throw new UnathorizedError("You are not authenticated.");
+		}
 	}
 
 	/**
@@ -163,21 +179,24 @@ public class UserLogin {
 	 * @param identifier		the user's username or email
 	 * @param password			the user's password
 	 * @return					{@code UsernameTokenPair} that contains the username, token, and token expiration
-	 * @throws BadRequestError	When the identifier can't be used or the password is wrong
+	 * @throws UnathorizedError When the identifier can't be used or the password is wrong
 	 */
-	public static UsernameTokenPair login(String identifier, String password) throws BadRequestError {
+	public static UsernameTokenPair login(String identifier, String password) throws UnathorizedError {
 		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
-		DataUser user = dataUsers.getUser(identifier);
-		if(user == null) {
-			user = dataUsers.getFromEmail(identifier);
-			if(user == null) {
-				throw new BadRequestError("Username or password is wrong.");
+		DataUser user;
+		try {
+			user = dataUsers.getUser(identifier);	// First try getting the user by username
+		} catch (NotFoundError e) {					// If that doesn't work try by email
+			try {
+				user = dataUsers.getFromEmail(identifier);
+			} catch (NotFoundError e1) {
+				throw new UnathorizedError("Username or password is wrong.");
 			}
 		}
 		
 		String hashedPassword = Base64.getEncoder().encodeToString(hashPassword(password, user.getSalt()));
 		if(!user.getPassword().equals(hashedPassword)) {
-			throw new BadRequestError("Username or password is wrong.");
+			throw new UnathorizedError("Username or password is wrong.");
 		}
 		
 		// Generate token and expiration date/time
@@ -188,7 +207,11 @@ public class UserLogin {
 		}while(dataUsers.isTokenUsed(token));	// Make sure this is a unique token
 		
 		// Add token and return
-		dataUsers.addToken(user.getUsername(), token, tokenExp);
+		try {
+			dataUsers.addToken(user.getUsername(), token, tokenExp);
+		} catch (BadRequestError e) {	// Shouldn't happen as we know the username is valid
+			throw new RuntimeException(e);
+		}
 		return new UsernameTokenPair(user.getUsername(), token, tokenExp);
 	}
 	

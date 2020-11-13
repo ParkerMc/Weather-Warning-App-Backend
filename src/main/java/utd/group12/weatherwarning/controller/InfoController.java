@@ -11,7 +11,7 @@ import utd.group12.weatherwarning.response.InfoResponse;
  * Handles the info requests
  */
 @RestController
-public class InfoController {
+public class InfoController extends BaseController {
 
 	/**
 	 * Responds with the random info the client needs

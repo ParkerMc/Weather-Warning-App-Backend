@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Date;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 /**
  * Used to return an error where the status code is not 2XX or 3XX
@@ -30,10 +29,6 @@ public class ErrorResponse {
 		this.message =  message;
 		this.path = path;
 	}
-	
-	public ResponseEntity<ErrorResponse> toResponseEntity() {
-		return new ResponseEntity<ErrorResponse>(this, HttpStatus.resolve(this.status));
-	}	
 	
 	public String getError() {
 		return error;

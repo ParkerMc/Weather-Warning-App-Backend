@@ -16,7 +16,7 @@ import utd.group12.weatherwarning.response.GreetingResponse;
  * http://localhost:8080/api/greeting?name=Test&service_name=Test_Service	<br/>
  */
 @RestController		// Registers our controller so the function will get called
-public class GreetingController {
+public class GreetingController extends BaseController {
 
 	private static final String template = "Hello, %s!";
 

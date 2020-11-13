@@ -7,11 +7,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.annotation.Nullable;
-
 import utd.group12.weatherwarning.WeatherWarningApplication;
 import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.data.IDataUsers;
+import utd.group12.weatherwarning.errors.BadRequestError;
+import utd.group12.weatherwarning.errors.ConflictError;
+import utd.group12.weatherwarning.errors.NotFoundError;
 
 public class DataUsers implements IDataUsers{
 	Map<String, JsonUser> users = new HashMap<String, JsonUser>();
@@ -21,25 +22,22 @@ public class DataUsers implements IDataUsers{
 	 * @param jUser		the {@code JsonUser} to convert
 	 * @return			the {@code DataUser}
 	 */
-	@Nullable
 	private static DataUser toDataUser(JsonUser jUser) {
-		if(jUser == null) {	// Return null if the JSON user is null
-			return null;
-		}
 		return new DataUser(jUser.username, jUser.email, jUser.google_id, jUser.password, jUser.salt, jUser.phoneNumber);	// Convert the user
 	}
 	
 	/**
 	 * Adds a token to the user
 	 * 
-	 * @param username		username to add the token to
-	 * @param token			token to add
-	 * @param tokenExp		the expiration date for the token
+	 * @param username			username to add the token to
+	 * @param token				token to add
+	 * @param tokenExp			the expiration date for the token
+	 * @throws BadRequestError 	if the user doesn't exist
 	 */
 	@Override
-	public void addToken(String username, String token, Date tokenExp) {
-		if(users.get(username) == null) {	// if the user doesn't exist return
-			return;
+	public void addToken(String username, String token, Date tokenExp) throws BadRequestError {
+		if(!users.containsKey(username)) {	// if the user doesn't exist throw error
+			throw new BadRequestError("User does not exit.");
 		}
 		// remove old tokens
 		Iterator<Entry<String, Date>> it = users.get(username).tokens.entrySet().iterator();
@@ -100,19 +98,19 @@ public class DataUsers implements IDataUsers{
 	 * 
 	 * Only {@code googleID} or {@code password} should be used NOT both 
 	 * 
-	 * @param username		the new user's username
-	 * @param email			the new user's email
-	 * @param googleID		the new user's googleID (or use {@code password})
-	 * @param password		the new user's password (or use {@code googleID})
-	 * @param salt			the salt for the new user's password (or use {@code googleID})
-	 * @param phoneNumber	the new user's phone number
-	 * @return				the user created
+	 * @param username			the new user's username
+	 * @param email				the new user's email
+	 * @param googleID			the new user's googleID (or use {@code password})
+	 * @param password			the new user's password (or use {@code googleID})
+	 * @param salt				the salt for the new user's password (or use {@code googleID})
+	 * @param phoneNumber		the new user's phone number
+	 * @return					the user created
+	 * @throws ConflictError	if the username(key) is already used
 	 */
 	@Override
-	@Nullable
-	public DataUser createUser(String username, String email, String googleID, String password, String salt, String phoneNumber) {
-		if(users.containsKey(username)) {	// If the user exits return null
-			return null;
+	public DataUser createUser(String username, String email, String googleID, String password, String salt, String phoneNumber) throws ConflictError {
+		if(users.containsKey(username)) {	// If the username is already used thorw error
+			throw new ConflictError("Username already used.");
 		}
 		users.put(username, new JsonUser(username, email, googleID, password, salt, phoneNumber)); // Else add them and save
 		WeatherWarningApplication.data.forceSave();
@@ -122,40 +120,51 @@ public class DataUsers implements IDataUsers{
 	/**
 	 * Gets a user by their email 
 	 * 
-	 * @param email	the email to use
-	 * @return		the user
+	 * @param email				the email to use
+	 * @return					the user
+	 * @throws NotFoundError 	if the user is not found
 	 */
 	@Override
-	public DataUser getFromEmail(String email) {
+	public DataUser getFromEmail(String email) throws NotFoundError {
 		for(JsonUser user : users.values()) {			// Loop through all the users
 			if(user.email.equals(email)) {				// if we find our email return true
 				return toDataUser(user);
 			}
 		}
-		return null;	// If it gets here, our email was not found
+		throw new NotFoundError("User not found.");
 	}
 	
 	/**
 	 * Gets a user by their Google ID
 	 * 
-	 * @param ID	the google ID to use
-	 * @return		the user
+	 * @param ID				the google ID to use
+	 * @return					the user
+	 * @throws NotFoundError 	if the user is not found
 	 */
 	@Override
-	@Nullable
-	public DataUser getFromGoogleID(String ID) {
+	public DataUser getFromGoogleID(String ID) throws NotFoundError {
 		for(JsonUser user : users.values()) {	// Loop through the users
 			if(user.google_id.equals(ID)) {		// And return the user if it has the right google ID
 				return toDataUser(user);
 			}
 		}
-		return null;
+		throw new NotFoundError("User not found.");
 	}
 
+	/**
+	 * Gets the user from their username
+	 * 
+	 * @param username			the username to use
+	 * @return					the user
+	 * @throws NotFoundError 	if the user is not found
+	 */
 	@Override
-	@Nullable
-	public DataUser getUser(String username) {
-		return toDataUser(users.get(username));
+	public DataUser getUser(String username) throws NotFoundError {
+		JsonUser user = users.get(username);
+		if(user == null) {
+			throw new NotFoundError("User not found.");
+		}
+		return toDataUser(user);
 	}
 	
 	/**
