@@ -5,7 +5,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import utd.group12.weatherwarning.errors.HttpError;
@@ -15,7 +14,6 @@ import utd.group12.weatherwarning.response.ErrorResponse;
 /**
  * Base for all the controllers to handle our special errors
  */
-@CrossOrigin(origins = "http://localhost:3000")
 public class BaseController {
 	Logger logger = LoggerFactory.getLogger(UserController.class);
 	
