@@ -21,6 +21,7 @@ import utd.group12.weatherwarning.errors.NotFoundError;
 import utd.group12.weatherwarning.errors.UnathorizedError;
 import utd.group12.weatherwarning.google.GoogleLogin;
 import utd.group12.weatherwarning.google.GoogleLogin.UserInfoResponce;
+import utd.group12.weatherwarning.response.LoggedinResponse;
 import utd.group12.weatherwarning.response.LoginResponse;
 import utd.group12.weatherwarning.response.UserResponse;
 import utd.group12.weatherwarning.user.UserLogin;
@@ -72,6 +73,20 @@ public class UserController extends BaseController{
 
 		// Return with requested information
 		return new ResponseEntity<LoginResponse>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
+	}
+	
+	/**
+	 * Checks to see if the user is logged in
+	 * 
+	 * @param username			the currently logged in username
+	 * @param token				a given token for the currently logged in user 
+	 * @return					if the user is logged in
+	 */
+	@GetMapping("/api/user/loggedin")
+	public ResponseEntity<LoggedinResponse> isLoggedin(
+			@RequestHeader("Auth-Username") String username,
+			@RequestHeader("Auth-Token") String token)  {		
+		return new ResponseEntity<LoggedinResponse>(new LoggedinResponse(UserLogin.isLoggedIn(username, token)), HttpStatus.FOUND);
 	}
 	
 	/**
