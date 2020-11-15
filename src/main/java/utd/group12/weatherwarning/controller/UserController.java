@@ -13,19 +13,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import utd.group12.weatherwarning.WeatherWarningApplication;
+import utd.group12.weatherwarning.core.UserLogin;
+import utd.group12.weatherwarning.core.UserLogin.UsernameTokenPair;
+import utd.group12.weatherwarning.core.google.GoogleLogin;
+import utd.group12.weatherwarning.core.google.GoogleLogin.UserInfoResponce;
 import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.errors.BadRequestError;
 import utd.group12.weatherwarning.errors.ConflictError;
 import utd.group12.weatherwarning.errors.InternalServerError;
 import utd.group12.weatherwarning.errors.NotFoundError;
 import utd.group12.weatherwarning.errors.UnathorizedError;
-import utd.group12.weatherwarning.google.GoogleLogin;
-import utd.group12.weatherwarning.google.GoogleLogin.UserInfoResponce;
 import utd.group12.weatherwarning.response.LoggedinResponse;
 import utd.group12.weatherwarning.response.LoginResponse;
 import utd.group12.weatherwarning.response.UserResponse;
-import utd.group12.weatherwarning.user.UserLogin;
-import utd.group12.weatherwarning.user.UserLogin.UsernameTokenPair;
 
 /**
  * Handles the user related requests

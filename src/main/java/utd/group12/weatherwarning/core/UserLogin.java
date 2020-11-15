@@ -1,4 +1,4 @@
-package utd.group12.weatherwarning.user;
+package utd.group12.weatherwarning.core;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;

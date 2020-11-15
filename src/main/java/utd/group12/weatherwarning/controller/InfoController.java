@@ -3,7 +3,7 @@ package utd.group12.weatherwarning.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import utd.group12.weatherwarning.google.GoogleLogin;
+import utd.group12.weatherwarning.core.google.GoogleLogin;
 import utd.group12.weatherwarning.response.InfoResponse;
 
 

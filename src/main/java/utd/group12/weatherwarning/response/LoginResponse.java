@@ -2,7 +2,7 @@ package utd.group12.weatherwarning.response;
 
 import java.util.Date;
 
-import utd.group12.weatherwarning.user.UserLogin.UsernameTokenPair;
+import utd.group12.weatherwarning.core.UserLogin.UsernameTokenPair;
 
 /**
  * The response for when a login is successful<br/>

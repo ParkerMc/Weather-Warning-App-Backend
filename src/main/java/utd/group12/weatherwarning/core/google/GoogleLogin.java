@@ -1,4 +1,4 @@
-package utd.group12.weatherwarning.google;
+package utd.group12.weatherwarning.core.google;
 
 import java.io.IOException;
 import java.util.HashMap;
