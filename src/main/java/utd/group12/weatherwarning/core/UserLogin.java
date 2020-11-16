@@ -85,10 +85,10 @@ public class UserLogin {
 			throw new BadRequestError("email invalid");
 		}
 		if(dataUsers.isUsernameUsed(username)) {	// if the user is already used throw error 
-			throw new ConflictError("username used");	
+			throw new ConflictError("That username has already been used");	
 		}
 		if(dataUsers.isEmailUsed(email)) {	// if the email is already used throw error 
-			throw new ConflictError("email used");	
+			throw new ConflictError("That email has already been used");	
 		}
 		
 		String salt = generateRndString(PASSWORD_SALT_LENGTH);
