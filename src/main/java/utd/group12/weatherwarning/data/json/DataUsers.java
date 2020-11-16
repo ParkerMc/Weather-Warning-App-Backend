@@ -1,16 +1,11 @@
 package utd.group12.weatherwarning.data.json;
 
-import java.time.Instant;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import utd.group12.weatherwarning.WeatherWarningApplication;
+import utd.group12.weatherwarning.core.Core;
 import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.data.IDataUsers;
-import utd.group12.weatherwarning.errors.BadRequestError;
 import utd.group12.weatherwarning.errors.ConflictError;
 import utd.group12.weatherwarning.errors.NotFoundError;
 
@@ -24,73 +19,6 @@ public class DataUsers implements IDataUsers{
 	 */
 	private static DataUser toDataUser(JsonUser jUser) {
 		return new DataUser(jUser.username, jUser.email, jUser.google_id, jUser.password, jUser.salt, jUser.phoneNumber);	// Convert the user
-	}
-	
-	/**
-	 * Adds a token to the user
-	 * 
-	 * @param username			username to add the token to
-	 * @param token				token to add
-	 * @param tokenExp			the expiration date for the token
-	 * @throws BadRequestError 	if the user doesn't exist
-	 */
-	@Override
-	public void addToken(String username, String token, Date tokenExp) throws BadRequestError {
-		if(!users.containsKey(username)) {	// if the user doesn't exist throw error
-			throw new BadRequestError("User does not exit.");
-		}
-		// remove old tokens
-		Iterator<Entry<String, Date>> it = users.get(username).tokens.entrySet().iterator();
-		while(it.hasNext()) {								// Loop through the map 
-			Entry<String, Date> usrToken = it.next();
-			if(usrToken.getValue().before(Date.from(Instant.now()))) {	// If the expiration is before today remove it
-				it.remove();
-			}
-		}
-		// if there are too many tokens, remove one (should only happen if someone is overloading the program)
-		if(users.get(username).tokens.size() > 100) {
-			users.get(username).tokens.remove(users.get(username).tokens.keySet().iterator().next());
-		}
-		users.get(username).tokens.put(token, tokenExp); // Actually add the token and save
-		WeatherWarningApplication.data.forceSave();
-	}
-	/**
-	 * Checks if the token is already used
-	 * 
-	 * @param token		token to check
-	 * @return			if the token is already used
-	 */
-	@Override
-	public boolean isTokenUsed(String token) {
-		for(JsonUser user : users.values()) {				// Loop through all the users
-			for(String userToken : user.tokens.keySet()) {	// and all the tokens
-				if(userToken.equals(token)) {				// if we find our token return true
-					return true;
-				}
-			}
-		}
-		return false;	// If it gets here, our token was not found
-	}
-
-	/**
-	 * Checks if a token is valid for the user
-	 * 
-	 * @param username	the username for the token
-	 * @param token		the token for the username
-	 * @return			if the token is valid for the username
-	 */
-	@Override
-	public boolean isTokenValid(String username, String token) {
-		if(!users.containsKey(username)) {	// If the user does not exist token is not valid
-			return false;
-		}
-		
-		Date experation = users.get(username).tokens.get(token);
-		if(experation == null || experation.before(Date.from(Instant.now()))) {	// If the token doesn't exit for the user  
-			return false;														// or is expired the token is not valid
-		}
-		
-		return true; // Else token is valid
 	}
 	
 	/**
@@ -108,12 +36,12 @@ public class DataUsers implements IDataUsers{
 	 * @throws ConflictError	if the username(key) is already used
 	 */
 	@Override
-	public DataUser createUser(String username, String email, String googleID, String password, String salt, String phoneNumber) throws ConflictError {
+	public DataUser create(String username, String email, String googleID, String password, String salt, String phoneNumber) throws ConflictError {
 		if(users.containsKey(username)) {	// If the username is already used thorw error
 			throw new ConflictError("Username already used.");
 		}
 		users.put(username, new JsonUser(username, email, googleID, password, salt, phoneNumber)); // Else add them and save
-		WeatherWarningApplication.data.forceSave();
+		Core.instance.forceSave();
 		return toDataUser(users.get(username));	// Then return the new user
 	}
 	
@@ -159,7 +87,7 @@ public class DataUsers implements IDataUsers{
 	 * @throws NotFoundError 	if the user is not found
 	 */
 	@Override
-	public DataUser getUser(String username) throws NotFoundError {
+	public DataUser get(String username) throws NotFoundError {
 		JsonUser user = users.get(username);
 		if(user == null) {
 			throw new NotFoundError("User not found.");
@@ -190,23 +118,8 @@ public class DataUsers implements IDataUsers{
 	 * @return			if there is a user with that username
 	 */
 	@Override
-	public boolean isUsernameUsed(String username) {
+	public boolean exists(String username) {
 		return users.containsKey(username);
-	}
-	
-	/**
-	 * Removes the token from a user
-	 * 
-	 * @param username	the username for the user
-	 * @param token		the token to remove
-	 */
-	@Override
-	public void removeToken(String username, String token) {
-		if(!users.containsKey(username)) {
-			return;
-		}
-		users.get(username).tokens.remove(token);
-		WeatherWarningApplication.data.forceSave();
 	}
 	
 	/**
@@ -219,7 +132,6 @@ public class DataUsers implements IDataUsers{
 		String password;
 		String salt;
 		String phoneNumber;
-		Map<String, Date> tokens = new HashMap<String, Date>();
 		
 		/**
 		 * Creates the {@code JsonUser}

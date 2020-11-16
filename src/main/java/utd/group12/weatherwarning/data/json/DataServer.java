@@ -10,6 +10,7 @@ import com.google.gson.GsonBuilder;
 
 import utd.group12.weatherwarning.data.IDataInfo;
 import utd.group12.weatherwarning.data.IDataServer;
+import utd.group12.weatherwarning.data.IDataTokens;
 import utd.group12.weatherwarning.data.IDataUsers;
 
 /**
@@ -78,6 +79,11 @@ public class DataServer implements IDataServer {
 	@Override
 	public IDataUsers getUsers() {
 		return this.json.users;
+	}
+
+	@Override
+	public IDataTokens getTokens() {
+		return this.json.tokens;
 	}
 
 }

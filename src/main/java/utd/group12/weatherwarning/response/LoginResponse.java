@@ -2,7 +2,7 @@ package utd.group12.weatherwarning.response;
 
 import java.util.Date;
 
-import utd.group12.weatherwarning.core.UserLogin.UsernameTokenPair;
+import utd.group12.weatherwarning.core.Users.UsernameTokenPair;
 
 /**
  * The response for when a login is successful<br/>
@@ -32,7 +32,7 @@ public class LoginResponse {
 	 * @param usernameTokenPair		The username, token, and token expiration 
 	 */
 	public LoginResponse(UsernameTokenPair usernameTokenPair) {
-		this(usernameTokenPair.getUsername(), usernameTokenPair.getToken(), usernameTokenPair.getTokenExp());
+		this(usernameTokenPair.getUsername(), usernameTokenPair.getToken().getToken(), usernameTokenPair.getToken().getExpiration());
 	}
 
 	public long getExpiration() {

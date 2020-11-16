@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +21,23 @@ import com.google.gson.GsonBuilder;
  */
 public class Utils {
 	private static Gson gson = new GsonBuilder().create();
+	
+	/**
+	 * Generates a random string with 0-9,a-z,A-Z of requested length
+	 * 
+	 * @param len	The length of the random string
+	 * @return		The random string
+	 */
+	public static String generateRndString(int len) {
+        String CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";	// Chars allowed
+        StringBuilder str = new StringBuilder();
+        Random rnd = new Random();
+        while (str.length() < len) { // length of the random string.
+            int index = (int) (rnd.nextFloat() * CHARS.length());
+            str.append(CHARS.charAt(index));
+        }
+        return str.toString();
+    }
 	
 	/**
 	 * Sends a GET request and phrases the response into JSON 

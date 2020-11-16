@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import utd.group12.weatherwarning.Utils;
-import utd.group12.weatherwarning.WeatherWarningApplication;
 import utd.group12.weatherwarning.data.IDataInfo;
 import utd.group12.weatherwarning.errors.InternalServerError;
 
@@ -15,13 +14,19 @@ import utd.group12.weatherwarning.errors.InternalServerError;
 public class GoogleLogin {
 	private final static String SCOPE = "https://www.googleapis.com/auth/userinfo.email";	// The scope of info needed
 	
+	private final Google google;
+	
+	public GoogleLogin(Google google) {
+		this.google = google;
+	}
+
 	/**
 	 * Generates the URL for the user to login at
 	 *  
 	 * @return	the URL for the user to login with Google
 	 */
-	public static String getLoginUrl() {
-		IDataInfo dataInfo = WeatherWarningApplication.data.getInfo(); // Make data easier to access
+	public String getLoginUrl() {
+		IDataInfo dataInfo = this.google.data.getInfo(); // Make data easier to access
 		
 		// Format the string
 		return String.format("https://accounts.google.com/o/oauth2/auth?client_id=%s&response_type=code&scope=%s&redirect_uri=%s&access_type=offline",
@@ -35,8 +40,8 @@ public class GoogleLogin {
 	 * @return					the user info
 	 * @throws InternalServerError	if there is an error with accessing the Google API
 	 */
-	public static UserInfoResponce getUserInfo(String code) throws InternalServerError {
-		IDataInfo dataInfo = WeatherWarningApplication.data.getInfo();	// Make data easier to access
+	public UserInfoResponce getUserInfo(String code) throws InternalServerError {
+		IDataInfo dataInfo = this.google.data.getInfo();	// Make data easier to access
 		
 		// Exchange auth code for access token
 		TokenResponce token;

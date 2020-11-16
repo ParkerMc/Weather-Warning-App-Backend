@@ -12,10 +12,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import utd.group12.weatherwarning.WeatherWarningApplication;
-import utd.group12.weatherwarning.core.UserLogin;
-import utd.group12.weatherwarning.core.UserLogin.UsernameTokenPair;
-import utd.group12.weatherwarning.core.google.GoogleLogin;
+import utd.group12.weatherwarning.core.Core;
+import utd.group12.weatherwarning.core.Users.UsernameTokenPair;
 import utd.group12.weatherwarning.core.google.GoogleLogin.UserInfoResponce;
 import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.errors.BadRequestError;
@@ -45,13 +43,13 @@ public class UserController extends BaseController{
 	public ResponseEntity<UserResponse> getUser(
 			@RequestHeader("Auth-Username") String username,
 			@RequestHeader("Auth-Token") String token) throws UnathorizedError {
-		UserLogin.requireLogin(username, token);		// Require them to be logged in
+		Core.instance.users.requireLogin(username, token);		// Require them to be logged in
 		
 		DataUser user;
 		try {
-			user = WeatherWarningApplication.data.getUsers().getUser(username);	// Get the user and return that with 302 Found
+			user = Core.instance.users.get(username);	// Get the user and return that with 302 Found
 		} catch (NotFoundError e) {
-			throw new RuntimeException();
+			throw new RuntimeException();		// We know the user exits as they are logged in
 		}	
 		return new ResponseEntity<UserResponse>(new UserResponse(user), HttpStatus.FOUND);
 	}
@@ -66,10 +64,10 @@ public class UserController extends BaseController{
 	@PostMapping("/api/user/google_login")
 	public ResponseEntity<LoginResponse> googleLogin(@RequestParam(value = "code") String code) throws InternalServerError {
 		// Try and get the user's ID and email from google
-		UserInfoResponce userInfo = GoogleLogin.getUserInfo(code);
+		UserInfoResponce userInfo = Core.instance.google.login.getUserInfo(code);
 		
 		// Get the username and generate a token 
-		UsernameTokenPair usernameTokenPair = UserLogin.googleLogin(userInfo.getId(), userInfo.getEmail());
+		UsernameTokenPair usernameTokenPair = Core.instance.users.googleLogin(userInfo.getId(), userInfo.getEmail());
 
 		// Return with requested information
 		return new ResponseEntity<LoginResponse>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
@@ -86,7 +84,7 @@ public class UserController extends BaseController{
 	public ResponseEntity<LoggedinResponse> isLoggedin(
 			@RequestHeader("Auth-Username") String username,
 			@RequestHeader("Auth-Token") String token)  {		
-		return new ResponseEntity<LoggedinResponse>(new LoggedinResponse(UserLogin.isLoggedIn(username, token)), HttpStatus.OK);
+		return new ResponseEntity<LoggedinResponse>(new LoggedinResponse(Core.instance.users.isLoggedIn(username, token)), HttpStatus.OK);
 	}
 	
 	/**
@@ -103,7 +101,7 @@ public class UserController extends BaseController{
 			@RequestParam(value = "password") String password) throws UnathorizedError {
 		
 		// Get the actual username and generate a token 
-		UsernameTokenPair usernameTokenPair = UserLogin.login(identifier, password);
+		UsernameTokenPair usernameTokenPair = Core.instance.users.login(identifier, password);
 		
 		// Return with requested information
 		return new ResponseEntity<LoginResponse>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
@@ -121,9 +119,13 @@ public class UserController extends BaseController{
 	public ResponseEntity<?> logout(
 			@RequestHeader("Auth-Username") String username,
 			@RequestHeader("Auth-Token") String token) throws UnathorizedError {
-		UserLogin.requireLogin(username, token);		// Require them to be logged in
+		Core.instance.users.requireLogin(username, token);		// Require them to be logged in
 		
-		UserLogin.logout(username, token); // Logout the user
+		try {
+			Core.instance.users.logout(username, token); 	// Logout the user
+		} catch (NotFoundError e) {
+			throw new RuntimeException(); // Should not ever happen as we know the user exists
+		} 
 		
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
@@ -142,9 +144,9 @@ public class UserController extends BaseController{
 	public ResponseEntity<LoginResponse> register(
 			@RequestParam(value = "username") String username,
 			@RequestParam(value = "email") String email,
-			@RequestParam(value = "password")String password) throws ConflictError, BadRequestError {
+			@RequestParam(value = "password") String password) throws ConflictError, BadRequestError {
 		
-		UsernameTokenPair usernameTokenPair = UserLogin.createUser(username, email, password, "");
+		UsernameTokenPair usernameTokenPair = Core.instance.users.create(username, email, password, "");
 		
 		return new ResponseEntity<LoginResponse>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
 	}

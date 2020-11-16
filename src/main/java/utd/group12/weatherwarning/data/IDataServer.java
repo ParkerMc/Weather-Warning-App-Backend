@@ -32,4 +32,11 @@ public interface IDataServer {
 	 * @return	the user data handler
 	 */
 	public IDataUsers getUsers();
+	
+	/**
+	 * Gets the token data handler
+	 * 
+	 * @return	the token data handler
+	 */
+	public IDataTokens getTokens();
 }

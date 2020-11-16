@@ -1,45 +1,12 @@
 package utd.group12.weatherwarning.data;
 
-import java.util.Date;
-
-import utd.group12.weatherwarning.errors.BadRequestError;
 import utd.group12.weatherwarning.errors.ConflictError;
 import utd.group12.weatherwarning.errors.NotFoundError;
 
-// TODO move token stuff to own file
 /**
  * Interface for the class that handles all user related data 
  */
 public interface IDataUsers {
-	/**
-	 * Adds a token to the user
-	 * 
-	 * @param username			username to add the token to
-	 * @param token				token to add
-	 * @param tokenExp			the expiration date for the token
-	 * @throws BadRequestError	if the user doesn't exist
-	 */
-	public void addToken(String username, String token, Date tokenExp) throws BadRequestError;
-	
-	/**
-	 * Checks if the token is already used
-	 * 
-	 * @param token		token to check
-	 * @return			if the token is already used
-	 */
-	public boolean isTokenUsed(String token);
-	
-	/**
-	 * Checks if a token is valid for the user
-	 * 
-	 * @param username	the username for the token
-	 * @param token		the token for the username
-	 * @return			if the token is valid for the username
-	 */
-	public boolean isTokenValid(String username, String token);
-
-	
-	
 	/**
 	 * Creates a new user <br/>
 	 * 
@@ -54,7 +21,7 @@ public interface IDataUsers {
 	 * @return					the user created
 	 * @throws ConflictError	if the username(key) is already used
 	 */
-	public DataUser createUser(String username, String email, String googleID, String password, String salt, String phoneNumber) throws ConflictError;
+	public DataUser create(String username, String email, String googleID, String password, String salt, String phoneNumber) throws ConflictError;
 	
 	/**
 	 * Gets a user by their email 
@@ -81,7 +48,7 @@ public interface IDataUsers {
 	 * @return			the user
 	 * @throws NotFoundError 	if the user is not found
 	 */
-	public DataUser getUser(String username) throws NotFoundError;
+	public DataUser get(String username) throws NotFoundError;
 	
 	/**
 	 * Checks if a user with a given email exits
@@ -92,18 +59,10 @@ public interface IDataUsers {
 	public boolean isEmailUsed(String email);
 	
 	/**
-	 * Checks if a user with a given username exits
+	 * Checks if a user with a given username exists
 	 * 
 	 * @param username	the username to check for
 	 * @return			if there is a user with that username
 	 */
-	public boolean isUsernameUsed(String username);
-
-	/**
-	 * Removes the token from a user
-	 * 
-	 * @param username	the username for the user
-	 * @param token		the token to remove
-	 */
-	public void removeToken(String username, String token);
+	public boolean exists(String username);
 }

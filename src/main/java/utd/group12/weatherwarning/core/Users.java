@@ -2,18 +2,14 @@ package utd.group12.weatherwarning.core;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Base64;
-import java.util.Date;
-import java.util.Random;
 
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 import utd.group12.weatherwarning.Utils;
-import utd.group12.weatherwarning.WeatherWarningApplication;
+import utd.group12.weatherwarning.data.DataToken;
 import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.data.IDataUsers;
 import utd.group12.weatherwarning.errors.BadRequestError;
@@ -22,10 +18,9 @@ import utd.group12.weatherwarning.errors.NotFoundError;
 import utd.group12.weatherwarning.errors.UnathorizedError;
 
 /**
- * Handles processing user login and account creation
+ * Handles everything related to users
  */
-public class UserLogin {
-	private final static int EXPIRATION_DAYS = 30;			// The number of days each token should stay valid for
+public class Users {
 	private final static int PASSWORD_ITERATIONS = 10000;	// iterations to hash the password with
     private final static int PASSWORD_KEY_LENGTH = 512;		// the key length for the password
     private final static int PASSWORD_SALT_LENGTH = 32;		// the salt length for the password
@@ -34,24 +29,28 @@ public class UserLogin {
     private final static String VALID_EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private final static String VALID_USERNAME_REGEX = "^[a-zA-Z0-9]+$";
 	
-	/**
-	 * Generates a random string with 0-9,a-z,A-Z of requested length
-	 * 
-	 * @param len	The length of the random string
-	 * @return		The random string
-	 */
-	private static String generateRndString(int len) {
-        String CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";	// Chars allowed
-        StringBuilder str = new StringBuilder();
-        Random rnd = new Random();
-        while (str.length() < len) { // length of the random string.
-            int index = (int) (rnd.nextFloat() * CHARS.length());
-            str.append(CHARS.charAt(index));
-        }
-        return str.toString();
-    }
+	private final Core core;
+	private IDataUsers data;
 	
-    private static byte[] hashPassword(String password, String salt) {
+	public Users(Core core) {
+		this.core = core;
+	}
+	
+	/**
+	 * When everything is starting up
+	 */
+	void start() {
+		this.data = core.data.getUsers();
+	}
+	
+	/**
+	 * Generates the password hash
+	 * 
+	 * @param password	the password to hash
+	 * @param salt		the salt to hash with
+	 * @return			the hashed password
+	 */
+    private byte[] hashPassword(String password, String salt) {
         try {
             SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
             PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), PASSWORD_ITERATIONS, PASSWORD_KEY_LENGTH);
@@ -63,7 +62,7 @@ public class UserLogin {
         }
     }
     
-	/**
+    /**
 	 * Creates a new user
 	 * 
 	 * @param username			the new user's username
@@ -74,9 +73,7 @@ public class UserLogin {
 	 * @throws ConflictError	if the user or email is already used
 	 * @throws BadRequestError 	if the username or email is invalid
 	 */
-	public static UsernameTokenPair createUser(String username, String email, String password, String phoneNumber) throws ConflictError, BadRequestError {
-		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
-		
+	public UsernameTokenPair create(String username, String email, String password, String phoneNumber) throws ConflictError, BadRequestError {		
 		if(!Utils.matchRegex(username, VALID_USERNAME_REGEX)) {	// Make sure username is valid
 			throw new BadRequestError("username invalid");
 		}
@@ -86,31 +83,47 @@ public class UserLogin {
 		if(password.length() < 5) {								// Make sure the password is long enough
 			throw new BadRequestError("password too short");
 		}
-		if(dataUsers.isUsernameUsed(username.toLowerCase())) {	// if the user is already used throw error 
+		if(this.data.exists(username.toLowerCase())) {	// if the user is already used throw error 
 			throw new ConflictError("That username has already been used");	
 		}
-		if(dataUsers.isEmailUsed(email)) {	// if the email is already used throw error 
+		if(this.data.isEmailUsed(email)) {	// if the email is already used throw error 
 			throw new ConflictError("That email has already been used");	
 		}
 		
-		String salt = generateRndString(PASSWORD_SALT_LENGTH);
+		String salt = Utils.generateRndString(PASSWORD_SALT_LENGTH);
 		String hashedPassword = Base64.getEncoder().encodeToString(hashPassword(password, salt));
 		
 		// Create the user
-		DataUser user = dataUsers.createUser(username.toLowerCase(), email, null, hashedPassword, salt, phoneNumber);
-				
-		// Generate token and expiration date/time
-		Date tokenExp = Date.from(Instant.now().plus(Duration.ofDays(EXPIRATION_DAYS)));
-		String token;
-		do {
-			token = generateRndString(50);
-		}while(dataUsers.isTokenUsed(token));	// Make sure this is a unique token
+		DataUser user = this.data.create(username.toLowerCase(), email, null, hashedPassword, salt, phoneNumber);
 		
-		// Add token and return
-		dataUsers.addToken(user.getUsername(), token, tokenExp);
-		return new UsernameTokenPair(user.getUsername(), token, tokenExp);
+		try {
+			return new UsernameTokenPair(user.getUsername(), this.core.tokens.create(user.getUsername()));
+		} catch (NotFoundError e) {
+			throw new RuntimeException(); // Should not ever happen as we know the user exists
+		}
 	}
-
+	
+	/**
+	 * Check if the user exits
+	 * 
+	 * @param username	the username to check for
+	 * @return			if the user exits
+	 */
+	public boolean exists(String username) {
+		return this.data.exists(username);
+	}
+	
+	/**
+	 * Gets the requested user
+	 * 
+	 * @param username			The username for the user to get 
+	 * @return					The user
+	 * @throws NotFoundError	If the user was not found
+	 */
+	public DataUser get(String username) throws NotFoundError {
+		return this.data.get(username.toLowerCase());
+	}
+	
 	/**
 	 * Processes login from google
 	 * 
@@ -118,37 +131,28 @@ public class UserLogin {
 	 * @param email		The user's email
 	 * @return			{@code UsernameTokenPair} that contains the username, token, and token expiration
 	 */
-	public static UsernameTokenPair googleLogin(String ID, String email) {
-		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
-		
-		// Generate token and expiration date/time
-		Date tokenExp = Date.from(Instant.now().plus(Duration.ofDays(EXPIRATION_DAYS)));
-		String token;
-		do {
-			token = generateRndString(50);
-		}while(dataUsers.isTokenUsed(token));	// Make sure this is a unique token
-		
+	public UsernameTokenPair googleLogin(String ID, String email) {		
 		// Get the user
 		DataUser user;
 		try {
-			user = dataUsers.getFromGoogleID(ID);
+			user = this.data.getFromGoogleID(ID);
 		} catch (NotFoundError e) {	// If the user does not exist create it
 			String username;
 			do {
-				username = generateRndString(15).toLowerCase();						// Generate a username
-			} while(dataUsers.isUsernameUsed(username));				// and make sure it is unique
+				username = Utils.generateRndString(15).toLowerCase();						// Generate a username
+			} while(this.data.exists(username));				// and make sure it is unique
 			try {
-				user = dataUsers.createUser(username, email, ID, null, null, "");
+				user = this.data.create(username, email, ID, null, null, "");
 			} catch (ConflictError e1) {
 				throw new RuntimeException(); // Because we check if username is use there will be no error
 			}	
 		}
 		
-		// Add token and return
 		try {
-			dataUsers.addToken(user.getUsername(), token, tokenExp);
-		} catch (BadRequestError e) {}	// Because we check if the username is there, there won't be an error
-		return new UsernameTokenPair(user.getUsername(), token, tokenExp);
+			return new UsernameTokenPair(user.getUsername(), this.core.tokens.create(user.getUsername()));
+		} catch (NotFoundError e) {
+			throw new RuntimeException(); // Should not ever happen as we know the user exists
+		}
 	}
 	
 	/**
@@ -158,7 +162,7 @@ public class UserLogin {
 	 * @param token				the token to authenticate with
 	 * @throws UnathorizedError	if the user is not authenticated
 	 */
-	public static void requireLogin(String username, String token) throws UnathorizedError {
+	public void requireLogin(String username, String token) throws UnathorizedError {
 		if(!isLoggedIn(username.toLowerCase(), token)) {	// If the user is not logged throw Unauthorized
 			throw new UnathorizedError("You are not authenticated.");
 		}
@@ -171,8 +175,8 @@ public class UserLogin {
 	 * @param token		token to check for
 	 * @return			if the user is authenticated
 	 */
-	public static boolean isLoggedIn(String username, String token) {
-		return WeatherWarningApplication.data.getUsers().isTokenValid(username.toLowerCase(), token);		// Just send to data handler
+	public boolean isLoggedIn(String username, String token) {
+		return this.core.tokens.exists(username, token);
 	}
 	
 	/**
@@ -183,14 +187,13 @@ public class UserLogin {
 	 * @return					{@code UsernameTokenPair} that contains the username, token, and token expiration
 	 * @throws UnathorizedError When the identifier can't be used or the password is wrong
 	 */
-	public static UsernameTokenPair login(String identifier, String password) throws UnathorizedError {
-		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
+	public UsernameTokenPair login(String identifier, String password) throws UnathorizedError {
 		DataUser user;
 		try {
-			user = dataUsers.getUser(identifier.toLowerCase());	// First try getting the user by username
+			user = this.data.get(identifier.toLowerCase());	// First try getting the user by username
 		} catch (NotFoundError e) {								// If that doesn't work try by email
 			try {
-				user = dataUsers.getFromEmail(identifier);
+				user = this.data.getFromEmail(identifier);
 			} catch (NotFoundError e1) {
 				throw new UnathorizedError("Username or password is wrong.");
 			}
@@ -200,31 +203,22 @@ public class UserLogin {
 		if(!user.getPassword().equals(hashedPassword)) {
 			throw new UnathorizedError("Username or password is wrong.");
 		}
-		
-		// Generate token and expiration date/time
-		Date tokenExp = Date.from(Instant.now().plus(Duration.ofDays(EXPIRATION_DAYS)));
-		String token;
-		do {
-			token = generateRndString(50);
-		}while(dataUsers.isTokenUsed(token));	// Make sure this is a unique token
-		
-		// Add token and return
 		try {
-			dataUsers.addToken(user.getUsername(), token, tokenExp);
-		} catch (BadRequestError e) {	// Shouldn't happen as we know the username is valid
-			throw new RuntimeException(e);
+			return new UsernameTokenPair(user.getUsername(), this.core.tokens.create(user.getUsername()));
+		} catch (NotFoundError e) {
+			throw new RuntimeException(); // Should not ever happen as we know the user exists
 		}
-		return new UsernameTokenPair(user.getUsername(), token, tokenExp);
 	}
 	
 	/**
 	 * Logs out the user
 	 * 
-	 * @param username	the username to logout from
-	 * @param token		the token being used
+	 * @param username			the username to logout from
+	 * @param token				the token being used
+	 * @throws NotFoundError 	if the user does not exist
 	 */
-	public static void logout(String username, String token) {
-		WeatherWarningApplication.data.getUsers().removeToken(username.toLowerCase(), token);		// Just send to data handler
+	public void logout(String username, String token) throws NotFoundError {
+		this.core.tokens.remove(username, token);
 	}
 	
 	/**
@@ -233,25 +227,19 @@ public class UserLogin {
 	 */
 	public static class UsernameTokenPair{
 		private final String username;
-		private final String token;
-		private final Date tokenExp;
+		private final DataToken token;
 		
-		public UsernameTokenPair(String username, String token, Date tokenExp) {
+		public UsernameTokenPair(String username, DataToken token) {
 			this.username = username;
 			this.token = token;
-			this.tokenExp = tokenExp;
 		}
 
 		public String getUsername() {
 			return username;
 		}
 
-		public String getToken() {
+		public DataToken getToken() {
 			return token;
-		}
-
-		public Date getTokenExp() {
-			return tokenExp;
-		}				
+		}			
 	}
 }
