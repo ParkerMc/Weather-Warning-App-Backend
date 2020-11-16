@@ -74,7 +74,6 @@ public class UserLogin {
 	 * @throws ConflictError	if the user or email is already used
 	 * @throws BadRequestError 	if the username or email is invalid
 	 */
-    // TODO add password requirements
 	public static UsernameTokenPair createUser(String username, String email, String password, String phoneNumber) throws ConflictError, BadRequestError {
 		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
 		
@@ -83,6 +82,9 @@ public class UserLogin {
 		}
 		if(!Utils.matchRegex(email, VALID_EMAIL_REGEX)) {		// Make sure email is valid
 			throw new BadRequestError("email invalid");
+		}
+		if(password.length() < 5) {								// Make sure the password is long enough
+			throw new BadRequestError("password too short");
 		}
 		if(dataUsers.isUsernameUsed(username.toLowerCase())) {	// if the user is already used throw error 
 			throw new ConflictError("That username has already been used");	
