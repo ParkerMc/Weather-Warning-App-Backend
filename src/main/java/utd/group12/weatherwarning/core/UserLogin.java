@@ -84,7 +84,7 @@ public class UserLogin {
 		if(!Utils.matchRegex(email, VALID_EMAIL_REGEX)) {		// Make sure email is valid
 			throw new BadRequestError("email invalid");
 		}
-		if(dataUsers.isUsernameUsed(username)) {	// if the user is already used throw error 
+		if(dataUsers.isUsernameUsed(username.toLowerCase())) {	// if the user is already used throw error 
 			throw new ConflictError("That username has already been used");	
 		}
 		if(dataUsers.isEmailUsed(email)) {	// if the email is already used throw error 
@@ -95,7 +95,7 @@ public class UserLogin {
 		String hashedPassword = Base64.getEncoder().encodeToString(hashPassword(password, salt));
 		
 		// Create the user
-		DataUser user = dataUsers.createUser(username, email, null, hashedPassword, salt, phoneNumber);
+		DataUser user = dataUsers.createUser(username.toLowerCase(), email, null, hashedPassword, salt, phoneNumber);
 				
 		// Generate token and expiration date/time
 		Date tokenExp = Date.from(Instant.now().plus(Duration.ofDays(EXPIRATION_DAYS)));
@@ -133,7 +133,7 @@ public class UserLogin {
 		} catch (NotFoundError e) {	// If the user does not exist create it
 			String username;
 			do {
-				username = generateRndString(15);						// Generate a username
+				username = generateRndString(15).toLowerCase();						// Generate a username
 			} while(dataUsers.isUsernameUsed(username));				// and make sure it is unique
 			try {
 				user = dataUsers.createUser(username, email, ID, null, null, "");
@@ -157,7 +157,7 @@ public class UserLogin {
 	 * @throws UnathorizedError	if the user is not authenticated
 	 */
 	public static void requireLogin(String username, String token) throws UnathorizedError {
-		if(!isLoggedIn(username, token)) {	// If the user is not logged throw Unauthorized
+		if(!isLoggedIn(username.toLowerCase(), token)) {	// If the user is not logged throw Unauthorized
 			throw new UnathorizedError("You are not authenticated.");
 		}
 	}
@@ -170,7 +170,7 @@ public class UserLogin {
 	 * @return			if the user is authenticated
 	 */
 	public static boolean isLoggedIn(String username, String token) {
-		return WeatherWarningApplication.data.getUsers().isTokenValid(username, token);		// Just send to data handler
+		return WeatherWarningApplication.data.getUsers().isTokenValid(username.toLowerCase(), token);		// Just send to data handler
 	}
 	
 	/**
@@ -185,8 +185,8 @@ public class UserLogin {
 		IDataUsers dataUsers = WeatherWarningApplication.data.getUsers();	// Make data easier to access
 		DataUser user;
 		try {
-			user = dataUsers.getUser(identifier);	// First try getting the user by username
-		} catch (NotFoundError e) {					// If that doesn't work try by email
+			user = dataUsers.getUser(identifier.toLowerCase());	// First try getting the user by username
+		} catch (NotFoundError e) {								// If that doesn't work try by email
 			try {
 				user = dataUsers.getFromEmail(identifier);
 			} catch (NotFoundError e1) {
@@ -222,7 +222,7 @@ public class UserLogin {
 	 * @param token		the token being used
 	 */
 	public static void logout(String username, String token) {
-		WeatherWarningApplication.data.getUsers().removeToken(username, token);		// Just send to data handler
+		WeatherWarningApplication.data.getUsers().removeToken(username.toLowerCase(), token);		// Just send to data handler
 	}
 	
 	/**
