@@ -86,7 +86,7 @@ public class UserController extends BaseController{
 	public ResponseEntity<LoggedinResponse> isLoggedin(
 			@RequestHeader("Auth-Username") String username,
 			@RequestHeader("Auth-Token") String token)  {		
-		return new ResponseEntity<LoggedinResponse>(new LoggedinResponse(UserLogin.isLoggedIn(username, token)), HttpStatus.FOUND);
+		return new ResponseEntity<LoggedinResponse>(new LoggedinResponse(UserLogin.isLoggedIn(username, token)), HttpStatus.OK);
 	}
 	
 	/**
