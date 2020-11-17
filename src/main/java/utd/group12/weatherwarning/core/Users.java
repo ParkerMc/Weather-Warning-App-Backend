@@ -87,7 +87,7 @@ public class Users {
 		if(this.data.exists(username.toLowerCase())) {	// if the user is already used throw error 
 			throw new ConflictError("That username has already been used");	
 		}
-		if(this.data.isEmailUsed(email)) {	// if the email is already used throw error 
+		if(this.data.isEmailUsed(email.toLowerCase())) {	// if the email is already used throw error 
 			throw new ConflictError("That email has already been used");	
 		}
 		
@@ -95,7 +95,7 @@ public class Users {
 		String hashedPassword = Base64.getEncoder().encodeToString(hashPassword(password, salt));
 		
 		// Create the user
-		DataUser user = this.data.create(username.toLowerCase(), email, null, hashedPassword, salt, name, phoneNumber);
+		DataUser user = this.data.create(username.toLowerCase(), email.toLowerCase(), null, hashedPassword, salt, name, phoneNumber);
 		
 		try {
 			return new UsernameTokenPair(user.getUsername(), this.core.tokens.create(user.getUsername()));
@@ -143,7 +143,7 @@ public class Users {
 				username = Utils.generateRndString(15).toLowerCase();						// Generate a username
 			} while(this.data.exists(username));				// and make sure it is unique
 			try {
-				user = this.data.create(username, email, ID, null, null, "", "");
+				user = this.data.create(username, email.toLowerCase(), ID, null, null, "", "");
 			} catch (ConflictError e1) {
 				throw new RuntimeException(); // Because we check if username is use there will be no error
 			}	
@@ -194,7 +194,7 @@ public class Users {
 			user = this.data.get(identifier.toLowerCase());	// First try getting the user by username
 		} catch (NotFoundError e) {								// If that doesn't work try by email
 			try {
-				user = this.data.getFromEmail(identifier);
+				user = this.data.getFromEmail(identifier.toLowerCase());
 			} catch (NotFoundError e1) {
 				throw new UnathorizedError("Username or password is wrong.");
 			}
@@ -235,11 +235,12 @@ public class Users {
 	 * @throws ConflictError	if there is already a user with the new email
 	 */
 	public void update(String username, String email, String password, String name, String phoneNumber) throws NotFoundError, BadRequestError, ConflictError {
+		DataUser user = get(username);
 		if(email != null) {
 			if(!Utils.matchRegex(email, VALID_EMAIL_REGEX)) {		// Make sure email is valid
 				throw new BadRequestError("email invalid");
 			}
-			if(this.data.isEmailUsed(email)) {	// if the email is already used throw error 
+			if(this.data.isEmailUsed(email)&&!email.equals(user.getEmail().toLowerCase())) {	// if the email is already used throw error 
 				throw new ConflictError("That email has already been used");	
 			}
 		}
@@ -252,7 +253,7 @@ public class Users {
 			newSalt = Utils.generateRndString(PASSWORD_SALT_LENGTH);
 			newPassword = Base64.getEncoder().encodeToString(hashPassword(password, newSalt));
 		}
-		this.data.update(username.toLowerCase(), email, newPassword, newSalt, name, phoneNumber);
+		this.data.update(username.toLowerCase(), email.toLowerCase(), newPassword, newSalt, name, phoneNumber);
 	}
 	
 	/**
