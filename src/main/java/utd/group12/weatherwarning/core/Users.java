@@ -223,6 +223,39 @@ public class Users {
 	}
 	
 	/**
+	 * Updates an already created user
+	 * 
+	 * @param username	the username to modify
+	 * @param email				the new email
+	 * @param password			the new password
+	 * @param name				the new name
+	 * @param phoneNumber		the new phoneNumber
+	 * @throws NotFoundError	if the user can't be found
+	 * @throws BadRequestError	if there was an error in the data
+	 * @throws ConflictError	if there is already a user with the new email
+	 */
+	public void update(String username, String email, String password, String name, String phoneNumber) throws NotFoundError, BadRequestError, ConflictError {
+		if(email != null) {
+			if(!Utils.matchRegex(email, VALID_EMAIL_REGEX)) {		// Make sure email is valid
+				throw new BadRequestError("email invalid");
+			}
+			if(this.data.isEmailUsed(email)) {	// if the email is already used throw error 
+				throw new ConflictError("That email has already been used");	
+			}
+		}
+		String newPassword = null;
+		String newSalt = null;
+		if(password != null) {
+			if(password.length() < 5) {								// Make sure the password is long enough
+				throw new BadRequestError("password too short");
+			}
+			newSalt = Utils.generateRndString(PASSWORD_SALT_LENGTH);
+			newPassword = Base64.getEncoder().encodeToString(hashPassword(password, newSalt));
+		}
+		this.data.update(username.toLowerCase(), email, newPassword, newSalt, name, phoneNumber);
+	}
+	
+	/**
 	 * Used to return the username, token, and token expiration when someone logs in
 	 * Only has the constructor and getters
 	 */

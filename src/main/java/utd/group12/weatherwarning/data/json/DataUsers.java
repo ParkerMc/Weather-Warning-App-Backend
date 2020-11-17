@@ -124,6 +124,41 @@ public class DataUsers implements IDataUsers{
 	}
 	
 	/**
+	 * Updates an already created user
+	 * 
+	 * @param username	the username to modify
+	 * @param email				the new email
+	 * @param password			the new password
+	 * @param name				the new name
+	 * @param phoneNumber		the new phoneNumber
+	 * @throws NotFoundError	if the user does not exist
+	 */
+	@Override
+	public void update(String username, String email, String newPassword, String newSalt, String name,
+			String phoneNumber) throws NotFoundError {
+		JsonUser user = users.get(username);
+		if(user == null) {
+			throw new NotFoundError("User not found");
+		}
+		if(email != null) {
+			user.email = email;
+		}
+		if(newPassword != null) {
+			user.password = newPassword;
+		}
+		if(newSalt != null) {
+			user.salt = newSalt;
+		}
+		if(name != null) {
+			user.name = name;
+		}
+		if(phoneNumber != null) {
+			user.phoneNumber = phoneNumber;
+		}
+		Core.instance.forceSave();
+	}
+	
+	/**
 	 * Stores the user in the JSON
 	 */
 	private class JsonUser{

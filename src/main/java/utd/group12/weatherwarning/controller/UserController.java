@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import utd.group12.weatherwarning.core.Core;
 import utd.group12.weatherwarning.core.Users.UsernameTokenPair;
 import utd.group12.weatherwarning.core.google.GoogleLogin.UserInfoResponce;
-import utd.group12.weatherwarning.data.DataUser;
 import utd.group12.weatherwarning.errors.BadRequestError;
 import utd.group12.weatherwarning.errors.ConflictError;
 import utd.group12.weatherwarning.errors.InternalServerError;
@@ -45,13 +45,11 @@ public class UserController extends BaseController{
 			@RequestHeader("Auth-Token") String token) throws UnathorizedError {
 		Core.instance.users.requireLogin(username, token);		// Require them to be logged in
 		
-		DataUser user;
 		try {
-			user = Core.instance.users.get(username);	// Get the user and return that with 302 Found
+			return new ResponseEntity<UserResponse>(new UserResponse( Core.instance.users.get(username)), HttpStatus.OK);	// Get the user and return that with 302 Found
 		} catch (NotFoundError e) {
 			throw new RuntimeException();		// We know the user exits as they are logged in
 		}	
-		return new ResponseEntity<UserResponse>(new UserResponse(user), HttpStatus.OK);
 	}
 	
 	/**
@@ -151,5 +149,42 @@ public class UserController extends BaseController{
 		UsernameTokenPair usernameTokenPair = Core.instance.users.create(username, email, password, name, phoneNumber);
 		
 		return new ResponseEntity<LoginResponse>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
+	}
+	
+	
+	/**
+	 * 
+	 * @param username				the user's username
+	 * @param token					the user's token
+	 * @param email					the user's new email
+	 * @param password				the user's new password
+	 * @param name					the user's new name
+	 * @param phoneNumber			the user's new phone number
+	 * @return						the updated user object
+	 * @throws UnathorizedError		if the user is not logged in
+	 * @throws ConflictError		if the email is already used by someone else
+	 * @throws BadRequestError 		if the email or password is invalid
+	 */
+	@PutMapping("/api/user")
+	public ResponseEntity<UserResponse> updateData(
+			@RequestHeader("Auth-Username") String username,
+			@RequestHeader("Auth-Token") String token,
+			@RequestParam(value = "email", required=false) String email,
+			@RequestParam(value = "password", required=false) String password,
+			@RequestParam(value = "name", required=false) String name,
+			@RequestParam(value = "phoneNumber", required=false) String phoneNumber) throws UnathorizedError, BadRequestError, ConflictError {
+		Core.instance.users.requireLogin(username, token);		// Require them to be logged in
+		
+		try {
+			Core.instance.users.update(username, email, password, name, phoneNumber);
+		} catch (NotFoundError e) {
+			throw new RuntimeException();	// We know this should never happen because they're logged in
+		}
+		
+		try {
+			return new ResponseEntity<UserResponse>(new UserResponse( Core.instance.users.get(username)), HttpStatus.OK);	// Get the user and return that with 302 Found
+		} catch (NotFoundError e) {
+			throw new RuntimeException();		// We know the user exits as they are logged in
+		}	
 	}
 }

@@ -66,4 +66,17 @@ public interface IDataUsers {
 	 * @return			if there is a user with that username
 	 */
 	public boolean exists(String username);
+
+	/**
+	 * Updates an already created user
+	 * 
+	 * @param username	the username to modify
+	 * @param email				the new email
+	 * @param password			the new password
+	 * @param name				the new name
+	 * @param phoneNumber		the new phoneNumber
+	 * @throws NotFoundError	if the user does not exist 
+	 */
+	public void update(String username, String email, String newPassword, String newSalt, String name,
+			String phoneNumber) throws NotFoundError;
 }
