@@ -19,6 +19,13 @@ public interface IDataInfo {
 	public String getClientSecret();
 	
 	/**
+	 * Gets the Google API key
+	 * 
+	 * @return	the Google API key
+	 */
+	public String getGoogleAPIKey();
+	
+	/**
 	 * Gets the redirect URI for after OAuth
 	 * 
 	 * @return the redirect URI

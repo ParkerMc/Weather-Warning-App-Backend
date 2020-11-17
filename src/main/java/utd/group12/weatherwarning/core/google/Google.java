@@ -14,4 +14,13 @@ public class Google {
 		this.data = data;
 		this.login = new GoogleLogin(this);
 	}
+	
+	/**
+	 * Gets the google API key
+	 * 
+	 * @return	the google API key
+	 */
+	public String getAPIKey() {
+		return this.data.getInfo().getGoogleAPIKey();
+	}
 }

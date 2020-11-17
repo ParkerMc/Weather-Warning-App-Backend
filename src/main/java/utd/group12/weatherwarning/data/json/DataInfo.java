@@ -9,6 +9,7 @@ public class DataInfo implements IDataInfo {
 	private String client_id = "";
 	private String client_secret = "";
 	private String redirect_uri = "";
+	private String google_api_key = "";
 
 	/**
 	 * Gets the client ID for Google
@@ -29,6 +30,16 @@ public class DataInfo implements IDataInfo {
 	public String getClientSecret() {
 		return this.client_secret;
 	}
+	
+	/**
+	 * Gets the Google API key
+	 * 
+	 * @return	the Google API key
+	 */
+	@Override
+	public String getGoogleAPIKey() {
+		return this.google_api_key;
+	}
 
 	/**
 	 * Gets the redirect URI for after OAuth
@@ -39,5 +50,4 @@ public class DataInfo implements IDataInfo {
 	public String getRedirectURI() {
 		return this.redirect_uri;
 	}
-
 }
