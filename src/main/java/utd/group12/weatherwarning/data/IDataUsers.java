@@ -17,11 +17,12 @@ public interface IDataUsers {
 	 * @param googleID			the new user's googleID (or use {@code password})
 	 * @param password			the new user's password (or use {@code googleID})
 	 * @param salt				the salt for the new user's password (or use {@code googleID})
+	 * @param name				the user's name
 	 * @param phoneNumber		the new user's phone number
 	 * @return					the user created
 	 * @throws ConflictError	if the username(key) is already used
 	 */
-	public DataUser create(String username, String email, String googleID, String password, String salt, String phoneNumber) throws ConflictError;
+	public DataUser create(String username, String email, String googleID, String password, String salt, String name, String phoneNumber) throws ConflictError;
 	
 	/**
 	 * Gets a user by their email 

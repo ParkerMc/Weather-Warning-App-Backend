@@ -144,9 +144,11 @@ public class UserController extends BaseController{
 	public ResponseEntity<LoginResponse> register(
 			@RequestParam(value = "username") String username,
 			@RequestParam(value = "email") String email,
-			@RequestParam(value = "password") String password) throws ConflictError, BadRequestError {
+			@RequestParam(value = "password") String password,
+			@RequestParam(value = "name", defaultValue="") String name,
+			@RequestParam(value = "phoneNumber", defaultValue="") String phoneNumber) throws ConflictError, BadRequestError {
 		
-		UsernameTokenPair usernameTokenPair = Core.instance.users.create(username, email, password, "");
+		UsernameTokenPair usernameTokenPair = Core.instance.users.create(username, email, password, name, phoneNumber);
 		
 		return new ResponseEntity<LoginResponse>(new LoginResponse(usernameTokenPair), HttpStatus.CREATED);
 	}

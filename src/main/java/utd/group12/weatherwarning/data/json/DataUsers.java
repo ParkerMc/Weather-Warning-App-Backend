@@ -18,7 +18,7 @@ public class DataUsers implements IDataUsers{
 	 * @return			the {@code DataUser}
 	 */
 	private static DataUser toDataUser(JsonUser jUser) {
-		return new DataUser(jUser.username, jUser.email, jUser.google_id, jUser.password, jUser.salt, jUser.phoneNumber);	// Convert the user
+		return new DataUser(jUser.username, jUser.email, jUser.google_id, jUser.password, jUser.salt, jUser.name, jUser.phoneNumber);	// Convert the user
 	}
 	
 	/**
@@ -31,16 +31,17 @@ public class DataUsers implements IDataUsers{
 	 * @param googleID			the new user's googleID (or use {@code password})
 	 * @param password			the new user's password (or use {@code googleID})
 	 * @param salt				the salt for the new user's password (or use {@code googleID})
+	 * @param name				the user's name
 	 * @param phoneNumber		the new user's phone number
 	 * @return					the user created
 	 * @throws ConflictError	if the username(key) is already used
 	 */
 	@Override
-	public DataUser create(String username, String email, String googleID, String password, String salt, String phoneNumber) throws ConflictError {
+	public DataUser create(String username, String email, String googleID, String password, String salt, String name, String phoneNumber) throws ConflictError {
 		if(users.containsKey(username)) {	// If the username is already used thorw error
 			throw new ConflictError("Username already used.");
 		}
-		users.put(username, new JsonUser(username, email, googleID, password, salt, phoneNumber)); // Else add them and save
+		users.put(username, new JsonUser(username, email, googleID, password, salt, name, phoneNumber)); // Else add them and save
 		Core.instance.forceSave();
 		return toDataUser(users.get(username));	// Then return the new user
 	}
@@ -131,6 +132,7 @@ public class DataUsers implements IDataUsers{
 		String google_id;
 		String password;
 		String salt;
+		String name;
 		String phoneNumber;
 		
 		/**
@@ -143,12 +145,13 @@ public class DataUsers implements IDataUsers{
 		 * @param salt			the password salt
 		 * @param phoneNumber	the phone number
 		 */
-		public JsonUser(String username, String email, String google_id, String password, String salt, String phoneNumber) {
+		public JsonUser(String username, String email, String google_id, String password, String salt, String name, String phoneNumber) {
 			this.username = username;
 			this.email = email;
 			this.google_id = google_id;
 			this.password = password;
 			this.salt = salt;
+			this.name = name;
 			this.phoneNumber = phoneNumber;
 		}
 	}

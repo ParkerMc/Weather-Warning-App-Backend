@@ -68,12 +68,13 @@ public class Users {
 	 * @param username			the new user's username
 	 * @param email				the new user's email
 	 * @param password			the new user's password
+	 * @param name				the user's name
 	 * @param phoneNumber		the new user's phone number
 	 * @return					the username, token, and token experation
 	 * @throws ConflictError	if the user or email is already used
 	 * @throws BadRequestError 	if the username or email is invalid
 	 */
-	public UsernameTokenPair create(String username, String email, String password, String phoneNumber) throws ConflictError, BadRequestError {		
+	public UsernameTokenPair create(String username, String email, String password, String name, String phoneNumber) throws ConflictError, BadRequestError {		
 		if(!Utils.matchRegex(username, VALID_USERNAME_REGEX)) {	// Make sure username is valid
 			throw new BadRequestError("username invalid");
 		}
@@ -94,7 +95,7 @@ public class Users {
 		String hashedPassword = Base64.getEncoder().encodeToString(hashPassword(password, salt));
 		
 		// Create the user
-		DataUser user = this.data.create(username.toLowerCase(), email, null, hashedPassword, salt, phoneNumber);
+		DataUser user = this.data.create(username.toLowerCase(), email, null, hashedPassword, salt, name, phoneNumber);
 		
 		try {
 			return new UsernameTokenPair(user.getUsername(), this.core.tokens.create(user.getUsername()));
@@ -142,7 +143,7 @@ public class Users {
 				username = Utils.generateRndString(15).toLowerCase();						// Generate a username
 			} while(this.data.exists(username));				// and make sure it is unique
 			try {
-				user = this.data.create(username, email, ID, null, null, "");
+				user = this.data.create(username, email, ID, null, null, "", "");
 			} catch (ConflictError e1) {
 				throw new RuntimeException(); // Because we check if username is use there will be no error
 			}	
