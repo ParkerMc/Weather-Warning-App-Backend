@@ -73,7 +73,7 @@ public class DataUsers implements IDataUsers{
 	@Override
 	public DataUser getFromGoogleID(String ID) throws NotFoundError {
 		for(JsonUser user : users.values()) {	// Loop through the users
-			if(user.google_id.equals(ID)) {		// And return the user if it has the right google ID
+			if(ID.equals(user.google_id)) {		// And return the user if it has the right google ID
 				return toDataUser(user);
 			}
 		}
