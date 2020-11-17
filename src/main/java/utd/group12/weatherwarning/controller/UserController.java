@@ -51,7 +51,7 @@ public class UserController extends BaseController{
 		} catch (NotFoundError e) {
 			throw new RuntimeException();		// We know the user exits as they are logged in
 		}	
-		return new ResponseEntity<UserResponse>(new UserResponse(user), HttpStatus.FOUND);
+		return new ResponseEntity<UserResponse>(new UserResponse(user), HttpStatus.OK);
 	}
 	
 	/**
