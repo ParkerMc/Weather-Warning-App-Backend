@@ -236,6 +236,7 @@ public class Users {
 	 */
 	public void update(String username, String email, String password, String name, String phoneNumber) throws NotFoundError, BadRequestError, ConflictError {
 		DataUser user = get(username);
+		String lowerEmail = null;
 		if(email != null) {
 			if(!Utils.matchRegex(email, VALID_EMAIL_REGEX)) {		// Make sure email is valid
 				throw new BadRequestError("email invalid");
@@ -243,6 +244,7 @@ public class Users {
 			if(this.data.isEmailUsed(email)&&!email.equals(user.getEmail().toLowerCase())) {	// if the email is already used throw error 
 				throw new ConflictError("That email has already been used");	
 			}
+			lowerEmail = email.toLowerCase();
 		}
 		String newPassword = null;
 		String newSalt = null;
@@ -253,7 +255,7 @@ public class Users {
 			newSalt = Utils.generateRndString(PASSWORD_SALT_LENGTH);
 			newPassword = Base64.getEncoder().encodeToString(hashPassword(password, newSalt));
 		}
-		this.data.update(username.toLowerCase(), email.toLowerCase(), newPassword, newSalt, name, phoneNumber);
+		this.data.update(username.toLowerCase(), lowerEmail, newPassword, newSalt, name, phoneNumber);
 	}
 	
 	/**
