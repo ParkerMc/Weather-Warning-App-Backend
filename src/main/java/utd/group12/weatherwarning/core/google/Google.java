@@ -23,4 +23,8 @@ public class Google {
 	public String getAPIKey() {
 		return this.data.getInfo().getGoogleAPIKey();
 	}
+
+	public String getServerGoogleClientID() {
+		return this.data.getInfo().getClientID();
+	}
 }

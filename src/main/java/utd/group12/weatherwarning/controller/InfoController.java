@@ -22,6 +22,6 @@ public class InfoController extends BaseController {
 	@GetMapping("/api/info")
 	public InfoResponse info() {
 		Google google = Core.instance.google;
-		return new InfoResponse(google.login.getLoginUrl(), google.getAPIKey());
+		return new InfoResponse(google.login.getLoginUrl(), google.getServerGoogleClientID(), google.getAPIKey());
 	}
 }

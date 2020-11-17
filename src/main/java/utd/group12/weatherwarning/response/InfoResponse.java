@@ -5,6 +5,7 @@ package utd.group12.weatherwarning.response;
  */
 public class InfoResponse {
 	private final String googleLoginUrl;
+	private final String serverGoogleClientID;
 	private final String googleAPIKey;
 	
 	/**
@@ -13,8 +14,9 @@ public class InfoResponse {
 	 * @param googleLoginUrl	The URL to have to user redirected to in order to log in with google
 	 * @param googleAPIKey		The google API key
 	 */
-	public InfoResponse(String googleLoginUrl, String googleAPIKey) {
+	public InfoResponse(String googleLoginUrl, String serverGoogleClientID, String googleAPIKey) {
 		this.googleLoginUrl = googleLoginUrl;
+		this.serverGoogleClientID = serverGoogleClientID;
 		this.googleAPIKey = googleAPIKey;
 	}
 
@@ -22,6 +24,10 @@ public class InfoResponse {
 		return googleAPIKey;
 	}
 	
+	public String getServerGoogleClientID() {
+		return serverGoogleClientID;
+	}
+
 	public String getGoogleLoginUrl() {
 		return this.googleLoginUrl;
 	}
