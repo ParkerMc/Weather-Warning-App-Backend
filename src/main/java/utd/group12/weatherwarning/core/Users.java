@@ -128,16 +128,20 @@ public class Users {
 	/**
 	 * Processes login from google
 	 * 
-	 * @param ID		The user's google ID 
-	 * @param email		The user's email
-	 * @return			{@code UsernameTokenPair} that contains the username, token, and token expiration
+	 * @param ID				The user's google ID 
+	 * @param email				The user's email
+	 * @return					{@code UsernameTokenPair} that contains the username, token, and token expiration
+	 * @throws ConflictError 	if the email has already been used under a different account (likely non google)
 	 */
-	public UsernameTokenPair googleLogin(String ID, String email) {		
+	public UsernameTokenPair googleLogin(String ID, String email) throws ConflictError {		
 		// Get the user
 		DataUser user;
 		try {
 			user = this.data.getFromGoogleID(ID);
 		} catch (NotFoundError e) {	// If the user does not exist create it
+			if(this.data.isEmailUsed(email.toLowerCase())) {	// if the email is already used throw error 
+				throw new ConflictError("That email has already been used");	
+			}
 			String username;
 			do {
 				username = Utils.generateRndString(15).toLowerCase();						// Generate a username

@@ -58,9 +58,10 @@ public class UserController extends BaseController{
 	 * @param code					the code from Google's OAuth
 	 * @return						an error or the token, username, and token expiration
 	 * @throws InternalServerError 	if there is a google API error
+	 * @throws ConflictError 		if the email has already been used under a different account (likely non google)
 	 */
 	@PostMapping("/api/user/google_login")
-	public ResponseEntity<LoginResponse> googleLogin(@RequestParam(value = "code") String code) throws InternalServerError {
+	public ResponseEntity<LoginResponse> googleLogin(@RequestParam(value = "code") String code) throws InternalServerError, ConflictError {
 		// Try and get the user's ID and email from google
 		UserInfoResponce userInfo = Core.instance.google.login.getUserInfo(code);
 		
