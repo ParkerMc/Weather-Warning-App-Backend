@@ -11,6 +11,7 @@ public class Core {
 	
 	public final Tokens tokens;
 	public final Users users;
+	public final Weather weather;
 	
 	final IDataServer data;
 			
@@ -21,12 +22,14 @@ public class Core {
 		
 		this.tokens = new Tokens(this);
 		this.users = new Users(this);
+		this.weather = new Weather(this);
 	}
 	
 	public void start() {
 		this.data.start();
 		this.tokens.start();
 		this.users.start();
+		this.weather.start();
 	}
 	
 	public void stop() {

@@ -51,15 +51,17 @@ public class Utils {
 		// Put args into url
 		String realUrl = new String(url);
 		boolean first = true;
-		for(Entry<String, String> arg : args.entrySet()) {
-			realUrl += String.format("%s%s=%s",
-					(first)? "?" : "&",
-					arg.getKey(),
-					arg.getValue()
-					);
+		if(args != null) {
+			for(Entry<String, String> arg : args.entrySet()) {
+				realUrl += String.format("%s%s=%s",
+						(first)? "?" : "&",
+								arg.getKey(),
+								arg.getValue()
+						);
 					
-			if(first) {
-				first = false;
+				if(first) {
+					first = false;
+				}
 			}
 		}
 		// Actually make request
