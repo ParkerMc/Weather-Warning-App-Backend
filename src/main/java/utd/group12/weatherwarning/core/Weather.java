@@ -73,7 +73,7 @@ public class Weather {
 				.properties;
 		
 		return new DataWeather(observations.temperature.value, observations.windSpeed.value, observations.barometricPressure.value, observations.relativeHumidity.value,
-				forecast.minTemperature.values[0].value, forecast.maxTemperature.values[0].value, forecast.probabilityOfPrecipitation.values[0].value);
+				forecast.minTemperature.values[0].value, forecast.maxTemperature.values[0].value, forecast.probabilityOfPrecipitation.values[0].value, weatherInfo.getStationName());
 	}
 
 	/**

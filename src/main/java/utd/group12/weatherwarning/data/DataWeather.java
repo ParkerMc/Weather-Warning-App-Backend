@@ -11,18 +11,20 @@ public class DataWeather {
 	final double low;			// C
 	final double high;			// C
 	final int rainProbability;	// %
+	final String locationName;
 	
 	/**
-	 * @param temp
-	 * @param windSpeed
-	 * @param pressure
-	 * @param humidity
-	 * @param low
-	 * @param high
-	 * @param rainProbability
+	 * @param temp				the temperature
+	 * @param windSpeed			speed of the wind
+	 * @param pressure			air pressure
+	 * @param humidity			air humidity
+	 * @param low				the lowest temperature for the day
+	 * @param high				the highest temperature for the day 
+	 * @param rainProbability	the probability of it raining
+	 * @param locationName		the name of the location were the weather was gotten from
 	 */
 	public DataWeather(double temp, double windSpeed, int pressure, double humidity,
-			double low, double high, int rainProbability) {
+			double low, double high, int rainProbability, String locationName) {
 		this.temp = temp;
 		this.windSpeed = windSpeed;
 		this.pressure = pressure;
@@ -30,6 +32,7 @@ public class DataWeather {
 		this.low = low;
 		this.high = high;
 		this.rainProbability = rainProbability;
+		this.locationName = locationName;
 	}
 
 	@Override
@@ -127,6 +130,13 @@ public class DataWeather {
 		return rainProbability;
 	}
 	
+	/**
+	 * @return the locationName
+	 */
+	public String getLocationName() {
+		return locationName;
+	}
+
 	/**
 	 * Stores the location info
 	 */
