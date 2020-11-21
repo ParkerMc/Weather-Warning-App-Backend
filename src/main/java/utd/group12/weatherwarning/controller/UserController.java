@@ -30,6 +30,9 @@ import utd.group12.weatherwarning.response.UserResponse;
  */
 @RestController
 public class UserController extends BaseController{
+	// TODO add forgot password
+	// TODO add email verification
+	// TODO add add delete account
 	
 	/**
 	 * Handles the request for current logged in user
