@@ -97,6 +97,9 @@ public class Users {
 		// Create the user
 		DataUser user = this.data.create(username.toLowerCase(), email.toLowerCase(), null, hashedPassword, salt, name, phoneNumber);
 		
+		// Create other data needed
+		this.core.settings.create(username);
+		
 		try {
 			return new UsernameTokenPair(user.getUsername(), this.core.tokens.create(user.getUsername()));
 		} catch (NotFoundError e) {
@@ -148,6 +151,9 @@ public class Users {
 			} while(this.data.exists(username));				// and make sure it is unique
 			try {
 				user = this.data.create(username, email.toLowerCase(), ID, null, null, "", "");
+				
+				// Create other data needed
+				this.core.settings.create(username);
 			} catch (ConflictError e1) {
 				throw new RuntimeException(); // Because we check if username is use there will be no error
 			}	

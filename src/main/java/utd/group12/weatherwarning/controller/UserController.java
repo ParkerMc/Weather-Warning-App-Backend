@@ -170,7 +170,7 @@ public class UserController extends BaseController{
 	 * @throws BadRequestError 		if the email or password is invalid
 	 */
 	@PutMapping("/api/user")
-	public ResponseEntity<UserResponse> updateData(
+	public ResponseEntity<UserResponse> update(
 			@RequestHeader("Auth-Username") String username,
 			@RequestHeader("Auth-Token") String token,
 			@RequestParam(value = "email", required=false) String email,

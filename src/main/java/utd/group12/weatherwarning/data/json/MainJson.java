@@ -7,4 +7,5 @@ public class MainJson {
 	DataInfo info = new DataInfo();
 	DataUsers users  = new DataUsers();
 	DataTokens tokens = new DataTokens();
+	DataSettings settings = new DataSettings();
 }

@@ -10,6 +10,7 @@ public class Core {
 	public final Google google;
 	
 	public final Tokens tokens;
+	public final Settings settings;
 	public final Users users;
 	public final Weather weather;
 	
@@ -21,6 +22,7 @@ public class Core {
 		this.google = new Google(this, this.data);
 		
 		this.tokens = new Tokens(this);
+		this.settings = new Settings(this);
 		this.users = new Users(this);
 		this.weather = new Weather(this);
 	}
@@ -28,6 +30,7 @@ public class Core {
 	public void start() {
 		this.data.start();
 		this.tokens.start();
+		this.settings.start();
 		this.users.start();
 		this.weather.start();
 	}

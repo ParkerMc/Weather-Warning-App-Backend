@@ -39,4 +39,11 @@ public interface IDataServer {
 	 * @return	the token data handler
 	 */
 	public IDataTokens getTokens();
+
+	/**
+	 * Gets the settings handler
+	 * 
+	 * @return	the settings handler
+	 */
+	public IDataSettings getSettings();
 }
