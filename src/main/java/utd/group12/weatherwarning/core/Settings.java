@@ -55,10 +55,7 @@ public class Settings {
 	 * @throws NotFoundError 		if the user's settings were not found
 	 */
 	public void update(String username, Boolean darkMode, Boolean useGPS, Boolean useMetric, Integer mainLocation) throws NotFoundError, BadRequestError {
-		if(mainLocation != null && (mainLocation.intValue() < 0 || mainLocation.intValue() > 3)) {
-			throw new BadRequestError("mainLocation must be between 0 and 3 inclusively");
-		}
-		
+		// TODO limit user location to existing locations		
 		this.data.update(username.toLowerCase(), darkMode, useGPS, useMetric, mainLocation);
 	}
 }
